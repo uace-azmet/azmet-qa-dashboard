@@ -17,7 +17,7 @@ library(pins)
 library(arrow)
 
 
-# Define UI for application that draws a histogram
+# Define UI for application
 ui <- navbarPage(
   # Application title
   title = "AZMET QA",
@@ -40,7 +40,7 @@ ui <- navbarPage(
   )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output) {
   board <- board_connect()
   fc_daily <- board |> pin_read("ericrscott/fc_daily")
@@ -80,6 +80,7 @@ server <- function(input, output) {
   #set up default action levels for pointblank
   al <- action_levels(warn_at = 1, stop_at = 0.1)
   
+  # Only run daily validations when "Daily" tab is active
   observe({
     if (input$navbar == "Daily") {
       output$check_daily <-
@@ -90,14 +91,13 @@ server <- function(input, output) {
           end <- input$dailyrange[2]
           daily <- az_daily(start_date = start, end_date = end)
           
-          
           check_daily(daily, start, end, al)
         })
     }
   })
   
   
-  # #only run server code for Hourly tab if it is active
+  # Only run hourly validations when "Hourly" tab is active
   observe({
     if (input$navbar == "Hourly") {
       output$check_hourly <-
@@ -113,7 +113,7 @@ server <- function(input, output) {
     }
   })
   
-  
+  # Only run forecast-based validations when "Forecast-based" tab is active
   observe({
     if (input$navbar == "Forecast-based") {
       
