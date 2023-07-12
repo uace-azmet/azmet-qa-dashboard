@@ -23,13 +23,13 @@ ui <- navbarPage(
   id = "navbar",
   tabPanel(
     title = "Daily",
-    uiOutput("date_range"),
+    uiOutput("daily_range"),
     gt_output(outputId = "check_daily"),
     
   ),
   tabPanel(
     title = "Hourly",
-    # uiOutput("date_range"),
+    uiOutput("hourly_range"),
     gt_output(outputId = "check_hourly")
   ),
   tabPanel("Forecaset-based")
@@ -37,13 +37,24 @@ ui <- navbarPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  output$date_range <- renderUI({
+  output$daily_range <- renderUI({
     dateRangeInput(
-      "daterange",
+      "dailyrange",
       "Date Range",
       min = ymd("2020-12-30"),
       max = Sys.Date(),
       start = Sys.Date() - 14,
+      end = Sys.Date()
+    )
+  })
+  
+  output$hourly_range <- renderUI({
+    dateRangeInput(
+      "hourlyrange",
+      "Date Range",
+      min = ymd("2020-12-30"),
+      max = Sys.Date(),
+      start = Sys.Date() - 2, #only 2 days because hourly
       end = Sys.Date()
     )
   })
@@ -60,9 +71,9 @@ server <- function(input, output) {
       output$check_daily <-
         gt::render_gt({
           
-          req(input$daterange)
-          start <- input$daterange[1]
-          end <- input$daterange[2]
+          req(input$dailyrange)
+          start <- input$dailyrange[1]
+          end <- input$dailyrange[2]
           daily <- az_daily(start_date = start, end_date = end)
           
           
@@ -78,10 +89,10 @@ server <- function(input, output) {
       output$check_hourly <-
         gt::render_gt({
           
-          req(input$daterange)
-          start <- input$daterange[1]
-          end <- input$daterange[2]
-          hourly <- az_hourly(start_date_time = as.POSIXct(start), end_date_time = as.POSIXct(end))
+          req(input$hourlyrange)
+          start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
+          end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
+          hourly <- az_hourly(start_date_time = start, end_date_time = end)
           
           check_hourly(hourly, start, end, al)
         })
