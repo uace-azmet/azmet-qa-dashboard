@@ -13,8 +13,9 @@ library(azmetr)
 library(gt)
 library(pointblank)
 library(lubridate)
-# library(pins)
-# library(arrow)
+library(pins)
+library(arrow)
+
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(
@@ -32,11 +33,17 @@ ui <- navbarPage(
     uiOutput("hourly_range"),
     gt_output(outputId = "check_hourly")
   ),
-  tabPanel("Forecaset-based")
+  tabPanel(
+    title = "Forecast-based",
+    uiOutput("fc_range"),
+    gt_output(outputId = "check_forecast")
+  )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  board <- board_connect()
+  fc_daily <- board |> pin_read("ericrscott/fc_daily")
   output$daily_range <- renderUI({
     dateRangeInput(
       "dailyrange",
@@ -59,9 +66,16 @@ server <- function(input, output) {
     )
   })
   
-  #create connection to Posit Connect pinboard with data
-  # board <- board_connect()
-  # daily <- board |> pin_read("ericrscott/azmet_daily")
+  output$fc_range <- renderUI({
+    dateRangeInput(
+      "fcrange",
+      "Date Range",
+      min = ymd("2020-12-30"),
+      max = Sys.Date(),
+      start = Sys.Date() - 14,
+      end = Sys.Date()
+    )
+  })
   
   #set up default action levels for pointblank
   al <- action_levels(warn_at = 1, stop_at = 0.1)
@@ -95,6 +109,22 @@ server <- function(input, output) {
           hourly <- az_hourly(start_date_time = start, end_date_time = end)
           
           check_hourly(hourly, start, end, al)
+        })
+    }
+  })
+  
+  
+  observe({
+    if (input$navbar == "Forecast-based") {
+      
+      output$check_forecast <- 
+        gt::render_gt({
+          
+          req(input$fcrange, fc_daily)
+          start <- input$fcrange[1]
+          end <- input$fcrange[2]
+          
+          check_forecast(fc_daily, start, end, al)
         })
     }
   })
