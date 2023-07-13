@@ -1,7 +1,6 @@
-check_daily <- function(daily, start, end, al) {
+check_daily <- function(daily, al) {
   daily_check <-
     daily |>
-    filter(datetime > start & datetime <= end) |>
     create_agent(
       # tbl_name = "Daily Data Consistency Checks",
       # label = "Consistency Checks",

@@ -1,6 +1,5 @@
-check_hourly <- function(hourly, start, end, al) {
+check_hourly <- function(hourly, al) {
   hourly_check <- hourly |>
-    filter(date_datetime > start & date_datetime <= end) |>
     create_agent(
       tbl_name = "Hourly measures",
       label = "Consistency Checks",

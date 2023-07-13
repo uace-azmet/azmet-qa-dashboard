@@ -44,6 +44,7 @@ ui <- navbarPage(
 server <- function(input, output) {
   board <- board_connect()
   fc_daily <- board |> pin_read("ericrscott/fc_daily")
+  
   output$daily_range <- renderUI({
     dateRangeInput(
       "dailyrange",
@@ -91,7 +92,7 @@ server <- function(input, output) {
           end <- input$dailyrange[2]
           daily <- az_daily(start_date = start, end_date = end)
           
-          check_daily(daily, start, end, al)
+          check_daily(daily, al)
         })
     }
   })
@@ -108,7 +109,7 @@ server <- function(input, output) {
           end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
           hourly <- az_hourly(start_date_time = start, end_date_time = end)
           
-          check_hourly(hourly, start, end, al)
+          check_hourly(hourly, al)
         })
     }
   })
