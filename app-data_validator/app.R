@@ -3,7 +3,8 @@ library(data.validator)
 library(tidyverse)
 library(azmetr)
 library(gt)
-
+source("R/check_daily.R")
+source("R/format_report_gt.R")
 ui <- fluidPage(
   uiOutput("daily_range"),
   gt::gt_output("validation")
