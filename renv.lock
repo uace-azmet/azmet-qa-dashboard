@@ -168,11 +168,11 @@
       "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "cct-datascience",
       "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "72939fa41c8c8c5fc437fab0061de73b889761be",
+      "RemoteSha": "61582f9ea6674a3718df879bc887bf50cd802e3e",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "R",
         "attempt",
@@ -186,7 +186,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "48d0d54e0a6639e5441b29cdd155c0e3"
+      "Hash": "af447f582202c6bc0749cfffdf7de19d"
     },
     "backports": {
       "Package": "backports",
