@@ -8,11 +8,11 @@ format_report_gt <- function(report, data) {
   warn_at <- 1 #warn if ≥ 1 row fails a validation
   error_at <- 0.05 #error if ≥ 5% of rows fail validation
   
-  get_results(report) |> 
+  data.validator::get_results(report) |> 
     #for some reason, report has duplicated rows. Seems like a bug in data.validator
     slice_head(n = 1, by = assertion.id) |> 
     mutate(n_failed = if_else(is.na(num.violations), 0, num.violations),
-           p_failed = n_failed / nrow(daily)) |> 
+           p_failed = n_failed / nrow(data)) |> 
     mutate(mark = case_when(
       p_failed >= error_at ~ "🛑",
       n_failed >= warn_at ~ "⚠️️",
@@ -56,10 +56,10 @@ format_report_gt <- function(report, data) {
 #' helper function to turn the error_df column of a data.validator report into a
 #' list column of tibbles. The `index` column contains the row numbers of the
 #' original data that did not pass validations.
-dl_btn <- function(error_df, daily) {
+dl_btn <- function(error_df, data) {
   if(length(error_df$index) > 0) {
-    daily |> 
-      slice(error_df$index)
+    data |> 
+      dplyr::slice(error_df$index)
   } else {
     NA
   }
