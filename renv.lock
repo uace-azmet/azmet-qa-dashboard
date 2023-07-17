@@ -127,6 +127,22 @@
       ],
       "Hash": "e8a22846fff485f0be3770c2da758713"
     },
+    "assertr": {
+      "Package": "assertr",
+      "Version": "3.0.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "MASS",
+        "R",
+        "dplyr",
+        "methods",
+        "rlang",
+        "stats",
+        "utils"
+      ],
+      "Hash": "e500845b6d773cecb7864ec21eb84081"
+    },
     "assertthat": {
       "Package": "assertthat",
       "Version": "0.2.1",
@@ -450,6 +466,28 @@
         "methods"
       ],
       "Hash": "b4c06e554f33344e044ccd7fdca750a9"
+    },
+    "data.validator": {
+      "Package": "data.validator",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R6",
+        "assertr",
+        "dplyr",
+        "htmltools",
+        "htmlwidgets",
+        "knitr",
+        "purrr",
+        "rlang",
+        "rmarkdown",
+        "shiny.semantic",
+        "tibble",
+        "tidyr",
+        "utils"
+      ],
+      "Hash": "f8f5773f5b999573999a6ce831f953f2"
     },
     "dbplyr": {
       "Package": "dbplyr",
@@ -1707,6 +1745,25 @@
         "xtable"
       ],
       "Hash": "f7f201522eedbc95f10ef323b100ff29"
+    },
+    "shiny.semantic": {
+      "Package": "shiny.semantic",
+      "Version": "0.4.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R6",
+        "glue",
+        "grDevices",
+        "htmltools",
+        "htmlwidgets",
+        "jsonlite",
+        "magrittr",
+        "purrr",
+        "shiny",
+        "stats"
+      ],
+      "Hash": "c211db8327fd25b8f73ba8ef5afd3f2d"
     },
     "slider": {
       "Package": "slider",
