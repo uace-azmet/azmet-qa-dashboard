@@ -2,6 +2,8 @@
 # azmet-qa-dashboard
 
 <!-- badges: start -->
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
 <!-- badges: end -->
 
 This report has two types of validations: 1) rule-based validations and 2) forecast-based validations.  Rule-based validations check if values are within ranges, are correct relative to one another, and are not out of range for certain numbers of observations.  Forecast-based validations start with creating a timeseries model of the data back to 2003.  These models are updated and used to forecast the current day.  The observed data is then compared to the forecast data, and if they are very different the data is flagged.
