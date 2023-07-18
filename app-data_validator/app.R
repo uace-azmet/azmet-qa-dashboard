@@ -6,6 +6,7 @@ library(gt)
 library(pins)
 library(arrow)
 
+source("R/helpers.R")
 source("R/check_daily.R")
 source("R/format_report_gt.R")
 
