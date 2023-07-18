@@ -33,8 +33,6 @@ ui <- navbarPage(
 )
 
 server <- function(input, output, session) {
-  # board <- board_connect()
-  # fc_daily <- board |> pin_read("ericrscott/fc_daily")
   
   # Date selector inputs -----
   output$daily_range <- renderUI({
@@ -55,6 +53,17 @@ server <- function(input, output, session) {
       min = ymd("2020-12-30"),
       max = Sys.Date(),
       start = Sys.Date() - 2, #only 2 days because hourly
+      end = Sys.Date()
+    )
+  })
+  
+  output$fc_range <- renderUI({
+    dateRangeInput(
+      "fcrange",
+      "Date Range",
+      min = ymd("2020-12-30"),
+      max = Sys.Date(),
+      start = Sys.Date() - 14,
       end = Sys.Date()
     )
   })
@@ -99,6 +108,28 @@ server <- function(input, output, session) {
     }
   })
   
+  # Forecast-based tab ----
+  
+  # Only run forecast-based validations when "Forecast-based" tab is active
+  observe({
+    if (input$navbar == "Forecast-based") {
+      board <- board_connect()
+      fc_daily <- board |> pin_read("ericrscott/fc_daily")
+      
+      output$check_forecast <- 
+        gt::render_gt({
+          
+          req(input$fcrange, fc_daily)
+          start <- input$fcrange[1]
+          end <- input$fcrange[2]
+          
+          report_fc <- check_forecast(fc_daily, start, end)
+          
+          #convert to gt table
+          format_report_gt(report_fc, fc_daily)
+        })
+    }
+  })
   
 }
 

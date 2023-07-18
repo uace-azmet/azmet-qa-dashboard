@@ -1,3 +1,4 @@
+library(gt)
 #' Convert `data.validator` report into custom `gt` table
 #'
 #' @param report a `data.validator` report object
@@ -5,6 +6,7 @@
 #'
 #' @return a `gt` table
 format_report_gt <- function(report, data) {
+  #TODO make these arguments so they can be adjusted in the dashboard maybe?
   warn_at <- 1 #warn if ≥ 1 row fails a validation
   error_at <- 0.05 #error if ≥ 5% of rows fail validation
   
