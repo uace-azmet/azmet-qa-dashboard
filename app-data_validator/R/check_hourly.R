@@ -1,3 +1,12 @@
+#' Create validation report for hourly data
+#'
+#' @param hourly data frame from azmetr::az_hourly()
+#'
+#' @return a data.validator report
+#'
+#' @examples
+#' hourly <- azmetr::az_hourly()
+#' check_hourly(hourly)
 check_hourly <- function(hourly) {
   hourly <- hourly |>
     dplyr::group_by(meta_station_name) |>
@@ -41,6 +50,7 @@ check_hourly <- function(hourly) {
     validate_if(temp_airC_delta, "|∆`temp_airC`| ≤ 19.4") |> 
     validate_if(relative_humidity_delta, "|∆`relative_humidity`| ≤ 50") |>
     validate_if(wind_spd_delta, "|∆`wind_spd_mps`| ≤ 10.3") |> 
+    #TODO would be nice if CSV would contain all 14+ hours in a row maybe?
     validate_if(sol_rad_total_14 | is.na(sol_rad_total_14),
                 "`sol_rad_total` not < 0.1 for more than 14 hrs") |> 
     validate_if(wind_spd_mps_14 | is.na(wind_spd_mps_14),
