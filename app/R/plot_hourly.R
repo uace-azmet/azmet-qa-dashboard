@@ -16,11 +16,11 @@ plot_hourly <- function(hourly, cols, station = "Tucson") {
     map(plot_cols, \(colname) {
       ggplot(hourly_sub, aes(x = date_datetime, y = .data[[colname]])) +
         geom_line() +
-        labs(title = colname) +
+        labs(title = colname, y = "") +
         theme_bw() +
         theme(
           panel.grid = element_blank(),
-          axis.title = element_blank(),
+          axis.title.x = element_blank(),
           # axis.text.y = element_blank(),
           # axis.ticks.y = element_blank(),
           plot.title = element_text()
