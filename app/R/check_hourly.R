@@ -59,5 +59,5 @@ check_hourly <- function(hourly) {
                 "`wind_vector_dir` not < 1 for more than 14 hrs") |> 
     
     data.validator::add_results(report)
-  report
+  get_results(report)
 }

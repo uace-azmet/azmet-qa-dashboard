@@ -59,6 +59,6 @@ check_daily <- function(daily) {
       description = "`temp_soil_10cm_*` (min ≤ mean ≤ max)"
     ) |>
     data.validator::add_results(report)
-  report
+  get_results(report)
   
 }

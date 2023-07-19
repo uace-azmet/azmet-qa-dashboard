@@ -16,9 +16,8 @@ ui <- page_navbar(
   # Application title
   title = "AZMET QA",
   id = "navbar",
-  #TODO use a different calendar widget taht fits better
-  #TODO make sidebar conditional on nav tab
   sidebar = sidebar(
+    #Makes sidebar conditional on active nav tab
     conditionalPanel(
       "input.navbar === 'Daily'",
       uiOutput("daily_range")
@@ -34,72 +33,85 @@ ui <- page_navbar(
   ), 
   nav_panel(
     title = "Daily",
-    card(
-      max_height = 250,
-      full_screen = TRUE,
-      card_header(
-        "Daily Data Validation"
-      ),
-      gt_output(outputId = "check_daily")
-    ),
-    card(
-      full_screen = TRUE,
-      layout_sidebar(
-        fillable = TRUE,
-        # fill = TRUE,
-        sidebar = sidebar(
-          shiny::selectInput(
-            "station_daily",
-            "Station",
-            choices = azmetr::station_info$meta_station_name,
-            multiple = FALSE
-          ),
-          shiny::selectInput(
-            "plot_cols_daily",
-            "Variables",
-            choices = c("Temperature", "Precipitation", "Wind & Sun")
-          )
+    layout_column_wrap(
+      width = NULL,
+      fill = FALSE,
+      # plot area 1.5 times that of table area
+      style = css(grid_template_columns = "1fr 1.5fr"),
+      
+      #card for validation table
+      card(
+        # max_height = 250,
+        full_screen = TRUE,
+        card_header(
+          "Daily Data Validation"
         ),
-        plotOutput(outputId = "plot_daily")
+        gt_output(outputId = "check_daily")
+      ),
+      
+      #card for plots with its own sidebar inputs
+      card(
+        full_screen = TRUE,
+        layout_sidebar(
+          fillable = TRUE,
+          # fill = TRUE,
+          sidebar = sidebar(
+            shiny::selectInput(
+              "station_daily",
+              "Station",
+              choices = azmetr::station_info$meta_station_name,
+              multiple = FALSE
+            ),
+            shiny::selectInput(
+              "plot_cols_daily",
+              "Variables",
+              choices = c("Temperature", "Precipitation", "Wind & Sun")
+            )
+          ),
+          plotOutput(outputId = "plot_daily")
+        )
       )
     )
-    
   ),
   nav_panel(
     title = "Hourly",
-    card(
-      max_height = 250,
-      full_screen = TRUE,
-      card_header(
-        "Hourly Data Validation"
-      ),
-      gt_output(outputId = "check_hourly")
-    ),
-    card(
-      full_screen = TRUE,
-      layout_sidebar(
-        fillable = TRUE,
-        sidebar = sidebar(
-          shiny::selectInput(
-            "station_hourly",
-            "Station",
-            choices = azmetr::station_info$meta_station_name,
-            multiple = FALSE
-          ),
-          shiny::selectInput(
-            "plot_cols_hourly",
-            "Variables",
-            choices = c("Temperature", "Precipitation", "Wind & Sun")
-          )
+    layout_column_wrap(
+      width = NULL,
+      fill = FALSE,
+      # plot area 1.5 times that of table area
+      style = css(grid_template_columns = "1fr 1.5fr"),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Hourly Data Validation"
         ),
-        plotOutput(outputId = "plot_hourly")
+        gt_output(outputId = "check_hourly")
+      ),
+      card(
+        full_screen = TRUE,
+        layout_sidebar(
+          fillable = TRUE,
+          sidebar = sidebar(
+            shiny::selectInput(
+              "station_hourly",
+              "Station",
+              choices = azmetr::station_info$meta_station_name,
+              multiple = FALSE
+            ),
+            shiny::selectInput(
+              "plot_cols_hourly",
+              "Variables",
+              choices = c("Temperature", "Precipitation", "Wind & Sun")
+            )
+          ),
+          plotOutput(outputId = "plot_hourly")
+        )
       )
     )
   ),
   nav_panel(
     title = "Forecast-based",
     card(
-      max_height = 250,
       full_screen = TRUE,
       card_header(
         "Forecast-Based Validation"
@@ -168,13 +180,13 @@ server <- function(input, output, session) {
         
       })
       output$plot_daily <- renderPlot({
-       cols_daily <- 
-         switch(input$plot_cols_daily,
-              "Temperature" = cols_daily_temp,
-              "Precipitation" = cols_daily_precip,
-              "Wind & Sun" = cols_daily_wind_sun)
-       plot_daily(daily, cols = cols_daily, station = input$station_daily)
-     })
+        cols_daily <- 
+          switch(input$plot_cols_daily,
+                 "Temperature" = cols_daily_temp,
+                 "Precipitation" = cols_daily_precip,
+                 "Wind & Sun" = cols_daily_wind_sun)
+        plot_daily(daily, cols = cols_daily, station = input$station_daily)
+      })
     }
   })
   
@@ -214,15 +226,17 @@ server <- function(input, output, session) {
     if (input$navbar == "Forecast-based") {
       board <- board_connect()
       fc_daily <- board |> pin_read("ericrscott/fc_daily")
+      req(input$fcrange, fc_daily)
+      start <- input$fcrange[1]
+      end <- input$fcrange[2]
+      fc_daily <- fc_daily |>
+        filter(datetime > start & datetime <= end) |> 
+        arrange(varname)
       
       output$check_forecast <- 
         gt::render_gt({
           
-          req(input$fcrange, fc_daily)
-          start <- input$fcrange[1]
-          end <- input$fcrange[2]
-          
-          report_fc <- check_forecast(fc_daily, start, end)
+          report_fc <- check_forecast(fc_daily)
           
           #convert to gt table
           format_report_gt(report_fc, fc_daily)
