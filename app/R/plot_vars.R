@@ -21,3 +21,10 @@ cols_daily_wind_sun <-
     "wind_vector_dir",
     "wind_vector_dir_stand_dev",
     "wind_vector_magnitude")
+
+
+cols_hourly_temp <- c("temp_airC",  "temp_soil_10cmC", "temp_soil_50cmC")
+
+cols_hourly_precip <- c("precip_total", "relative_humidity")
+
+cols_hourly_wind_sun <- c("sol_rad_total", "wind_2min_spd_mean_mps", "wind_2min_spd_max_mps", "wind_2min_vector_dir", "wind_spd_max_mps", "wind_spd_mps", "wind_vector_dir", "wind_vector_dir_stand_dev", "wind_vector_magnitude")

@@ -2,19 +2,19 @@ library(azmetr)
 library(tidyverse)
 library(units)
 library(patchwork)
-# daily <-  az_daily(start = "2023-07-01", end = "2023-07-18")
+# hourly <-  az_hourly(start = "2023-07-01 00", end = "2023-07-18 00")
 # plot_daily(daily)
-plot_daily <- function(daily, cols, station = "Tucson") {
-  daily_sub <- 
-    daily |> 
+plot_hourly <- function(hourly, cols, station = "Tucson") {
+  hourly_sub <- 
+    hourly |> 
     az_add_units() |> 
     filter(meta_station_name == station) |> 
-    select(datetime, any_of(cols))
+    select(date_datetime, any_of(cols))
   
-  plot_cols <- daily_sub |> select(-datetime) |> colnames()
+  plot_cols <- hourly_sub |> select(-date_datetime) |> colnames()
   plot_list <- 
     map(plot_cols, \(colname) {
-      ggplot(daily_sub, aes(x = datetime, y = .data[[colname]])) +
+      ggplot(hourly_sub, aes(x = date_datetime, y = .data[[colname]])) +
         geom_line() +
         labs(title = colname) +
         theme_bw() +

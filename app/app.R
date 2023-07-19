@@ -46,7 +46,7 @@ ui <- page_navbar(
       full_screen = TRUE,
       layout_sidebar(
         fillable = TRUE,
-        fill = TRUE,
+        # fill = TRUE,
         sidebar = sidebar(
           shiny::selectInput(
             "station_daily",
@@ -57,7 +57,7 @@ ui <- page_navbar(
           shiny::selectInput(
             "plot_cols_daily",
             "Variables",
-            choices = c("temperature", "precipitation", "wind & sun")
+            choices = c("Temperature", "Precipitation", "Wind & Sun")
           )
         ),
         plotOutput(outputId = "plot_daily")
@@ -74,6 +74,26 @@ ui <- page_navbar(
         "Hourly Data Validation"
       ),
       gt_output(outputId = "check_hourly")
+    ),
+    card(
+      full_screen = TRUE,
+      layout_sidebar(
+        fillable = TRUE,
+        sidebar = sidebar(
+          shiny::selectInput(
+            "station_hourly",
+            "Station",
+            choices = azmetr::station_info$meta_station_name,
+            multiple = FALSE
+          ),
+          shiny::selectInput(
+            "plot_cols_hourly",
+            "Variables",
+            choices = c("Temperature", "Precipitation", "Wind & Sun")
+          )
+        ),
+        plotOutput(outputId = "plot_hourly")
+      )
     )
   ),
   nav_panel(
@@ -150,10 +170,9 @@ server <- function(input, output, session) {
       output$plot_daily <- renderPlot({
        cols_daily <- 
          switch(input$plot_cols_daily,
-              "temperature" = cols_daily_temp,
-              "precipitation" = cols_daily_precip,
-              "wind & sun" = cols_daily_wind_sun
-              )
+              "Temperature" = cols_daily_temp,
+              "Precipitation" = cols_daily_precip,
+              "Wind & Sun" = cols_daily_wind_sun)
        plot_daily(daily, cols = cols_daily, station = input$station_daily)
      })
     }
@@ -162,19 +181,28 @@ server <- function(input, output, session) {
   # Hourly tab ----
   observe({
     if (input$navbar == "Hourly") {
+      req(input$hourlyrange) #wait until input exists
+      
+      start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
+      end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
+      #query API
+      hourly <- az_hourly(start_date_time = start, end_date_time = end)
+      
       output$check_hourly <- gt::render_gt({
-        req(input$hourlyrange) #wait until input exists
-        
-        start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
-        end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
-        #query API
-        hourly <- az_hourly(start_date_time = start, end_date_time = end)
         
         #do validation report
         report_hourly <- check_hourly(hourly)
         
         #convert to gt table
         format_report_gt(report_hourly, hourly)
+      })
+      output$plot_hourly <- renderPlot({
+        cols_hourly <- 
+          switch(input$plot_cols_hourly,
+                 "Temperature" = cols_hourly_temp,
+                 "Precipitation" = cols_hourly_precip,
+                 "Wind & Sun" = cols_hourly_wind_sun)
+        plot_hourly(hourly, cols = cols_hourly, station = input$station_hourly)
       })
     }
   })
