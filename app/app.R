@@ -11,6 +11,7 @@ source("R/helpers.R")
 source("R/check_daily.R")
 source("R/format_report_gt.R")
 
+
 ui <- page_navbar(
   # Application title
   title = "AZMET QA",
@@ -40,6 +41,27 @@ ui <- page_navbar(
         "Daily Data Validation"
       ),
       gt_output(outputId = "check_daily")
+    ),
+    card(
+      full_screen = TRUE,
+      layout_sidebar(
+        fillable = TRUE,
+        fill = TRUE,
+        sidebar = sidebar(
+          shiny::selectInput(
+            "station_daily",
+            "Station",
+            choices = azmetr::station_info$meta_station_name,
+            multiple = FALSE
+          ),
+          shiny::selectInput(
+            "plot_cols_daily",
+            "Variables",
+            choices = c("temperature", "precipitation", "wind & sun")
+          )
+        ),
+        plotOutput(outputId = "plot_daily")
+      )
     )
     
   ),
@@ -74,10 +96,11 @@ server <- function(input, output, session) {
     dateRangeInput(
       "dailyrange",
       "Date Range",
+      start = Sys.Date() - 14,
+      end = Sys.Date(),
       min = ymd("2020-12-30"),
       max = Sys.Date(),
-      start = Sys.Date() - 14,
-      end = Sys.Date()
+      format = "mm/dd/yy"
     )
   })
   
@@ -85,10 +108,11 @@ server <- function(input, output, session) {
     dateRangeInput(
       "hourlyrange",
       "Date Range",
+      start = Sys.Date() - 2, #only 2 days because hourly
+      end = Sys.Date(),
       min = ymd("2020-12-30"),
       max = Sys.Date(),
-      start = Sys.Date() - 2, #only 2 days because hourly
-      end = Sys.Date()
+      format = "mm/dd/yy"
     )
   })
   
@@ -96,30 +120,42 @@ server <- function(input, output, session) {
     dateRangeInput(
       "fcrange",
       "Date Range",
+      start = Sys.Date() - 14,
+      end = Sys.Date(),
       min = ymd("2020-12-30"),
       max = Sys.Date(),
-      start = Sys.Date() - 14,
-      end = Sys.Date()
+      format = "mm/dd/yy"
     )
   })
   
   # Daily tab ----
   observe({
     if (input$navbar == "Daily") {
+      req(input$dailyrange) #wait until input exists
+      
+      start <- input$dailyrange[1]
+      end <- input$dailyrange[2]
+      #query API
+      daily <- az_daily(start_date = start, end_date = end)
       output$check_daily <- gt::render_gt({
-        req(input$dailyrange) #wait until input exists
         
-        start <- input$dailyrange[1]
-        end <- input$dailyrange[2]
-        #query API
-        daily <- az_daily(start_date = start, end_date = end)
         
         #do validation report
         report_daily <- check_daily(daily)
         
         #convert to gt table
         format_report_gt(report_daily, daily)
+        
       })
+      output$plot_daily <- renderPlot({
+       cols_daily <- 
+         switch(input$plot_cols_daily,
+              "temperature" = cols_daily_temp,
+              "precipitation" = cols_daily_precip,
+              "wind & sun" = cols_daily_wind_sun
+              )
+       plot_daily(daily, cols = cols_daily, station = input$station_daily)
+     })
     }
   })
   

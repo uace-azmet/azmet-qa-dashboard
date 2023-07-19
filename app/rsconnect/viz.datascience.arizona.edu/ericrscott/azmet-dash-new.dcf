@@ -4,10 +4,10 @@ username: ericrscott
 account: ericrscott
 server: viz.datascience.arizona.edu
 hostUrl: https://viz.datascience.arizona.edu/__api__
-appId: 791
-bundleId: 3016
-url: https://viz.datascience.arizona.edu:443/content/1e437afa-2b76-4e3d-9497-4262776b5ffa/
-when: 1689709067.53958
-lastSyncTime: 1689709067.53959
+appId: 792
+bundleId: 3019
+url: https://viz.datascience.arizona.edu:443/content/70034627-bc75-4cc3-93ce-fe8e18ab0602/
+when: 1689780486.78864
+lastSyncTime: 1689780486.78865
 asMultiple: FALSE
 asStatic: FALSE
