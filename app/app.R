@@ -6,6 +6,7 @@ library(gt)
 library(pins)
 library(arrow)
 library(bslib)
+library(shinycssloaders)
 
 source("R/helpers.R")
 source("R/check_daily.R")
@@ -46,7 +47,7 @@ ui <- page_navbar(
         card_header(
           "Daily Data Validation"
         ),
-        gt_output(outputId = "check_daily")
+        gt_output(outputId = "check_daily") |> withSpinner(4)
       ),
       
       #card for plots with its own sidebar inputs
@@ -68,7 +69,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precipitation", "Wind & Sun")
             )
           ),
-          plotOutput(outputId = "plot_daily")
+          plotOutput(outputId = "plot_daily") |> withSpinner(4)
         )
       )
     )
@@ -85,7 +86,7 @@ ui <- page_navbar(
         card_header(
           "Hourly Data Validation"
         ),
-        gt_output(outputId = "check_hourly")
+        gt_output(outputId = "check_hourly") |> withSpinner(4)
       ),
       card(
         full_screen = TRUE,
@@ -104,7 +105,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precipitation", "Wind & Sun")
             )
           ),
-          plotOutput(outputId = "plot_hourly")
+          plotOutput(outputId = "plot_hourly") |> withSpinner(4)
         )
       )
     )
@@ -116,7 +117,7 @@ ui <- page_navbar(
       card_header(
         "Forecast-Based Validation"
       ),
-      gt_output(outputId = "check_forecast")
+      gt_output(outputId = "check_forecast") |> withSpinner(4)
     )
   )
 )
@@ -170,7 +171,8 @@ server <- function(input, output, session) {
       #query API
       daily <- az_daily(start_date = start, end_date = end)
       output$check_daily <- gt::render_gt({
-        
+        #reload when input changes
+        input$dailyrange
         
         #do validation report
         report_daily <- check_daily(daily)
@@ -180,6 +182,9 @@ server <- function(input, output, session) {
         
       })
       output$plot_daily <- renderPlot({
+        #reload when input changes
+        input$dailyrange
+        
         cols_daily <- 
           switch(input$plot_cols_daily,
                  "Temperature" = cols_daily_temp,
@@ -201,6 +206,8 @@ server <- function(input, output, session) {
       hourly <- az_hourly(start_date_time = start, end_date_time = end)
       
       output$check_hourly <- gt::render_gt({
+        # force reload as soon as input changes
+        input$hourlyrange
         
         #do validation report
         report_hourly <- check_hourly(hourly)
@@ -209,6 +216,9 @@ server <- function(input, output, session) {
         format_report_gt(report_hourly, hourly)
       })
       output$plot_hourly <- renderPlot({
+        # force reload as soon as input changes
+        input$hourlyrange
+        
         cols_hourly <- 
           switch(input$plot_cols_hourly,
                  "Temperature" = cols_hourly_temp,
@@ -235,6 +245,8 @@ server <- function(input, output, session) {
       
       output$check_forecast <- 
         gt::render_gt({
+          #reload when input changes
+          input$fcrange
           
           report_fc <- check_forecast(fc_daily)
           
