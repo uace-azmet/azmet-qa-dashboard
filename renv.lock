@@ -1781,6 +1781,20 @@
       ],
       "Hash": "c211db8327fd25b8f73ba8ef5afd3f2d"
     },
+    "shinycssloaders": {
+      "Package": "shinycssloaders",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "digest",
+        "glue",
+        "grDevices",
+        "shiny"
+      ],
+      "Hash": "f39bb3c44a9b496723ec7e86f9a771d8"
+    },
     "slider": {
       "Package": "slider",
       "Version": "0.3.0",

@@ -12,11 +12,12 @@ source("R/helpers.R")
 source("R/check_daily.R")
 source("R/format_report_gt.R")
 
-
+# UI -----
 ui <- page_navbar(
   # Application title
   title = "AZMET QA",
   id = "navbar",
+  ## Sidebar ----
   sidebar = sidebar(
     #Makes sidebar conditional on active nav tab
     conditionalPanel(
@@ -32,6 +33,7 @@ ui <- page_navbar(
       uiOutput("fc_range")
     )
   ), 
+  ## Daily ----
   nav_panel(
     title = "Daily",
     layout_column_wrap(
@@ -55,8 +57,8 @@ ui <- page_navbar(
         full_screen = TRUE,
         layout_sidebar(
           fillable = TRUE,
-          # fill = TRUE,
           sidebar = sidebar(
+            width = "200px",
             shiny::selectInput(
               "station_daily",
               "Station",
@@ -74,6 +76,7 @@ ui <- page_navbar(
       )
     )
   ),
+  ## Hourly ----
   nav_panel(
     title = "Hourly",
     layout_column_wrap(
@@ -93,6 +96,7 @@ ui <- page_navbar(
         layout_sidebar(
           fillable = TRUE,
           sidebar = sidebar(
+            width = "200px",
             shiny::selectInput(
               "station_hourly",
               "Station",
@@ -110,14 +114,42 @@ ui <- page_navbar(
       )
     )
   ),
+  ## Forecast-based ----
   nav_panel(
     title = "Forecast-based",
-    card(
-      full_screen = TRUE,
-      card_header(
-        "Forecast-Based Validation"
+    layout_column_wrap(
+      width = NULL,
+      fill = FALSE,
+      # plot area 1.5 times that of table area
+      style = css(grid_template_columns = "1fr 1.5fr"),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Forecast-Based Validation"
+        ),
+        gt_output(outputId = "check_forecast") |> withSpinner(4)
       ),
-      gt_output(outputId = "check_forecast") |> withSpinner(4)
+      card(
+        full_screen = TRUE,
+        layout_sidebar(
+          fillable = TRUE,
+          sidebar = sidebar(
+            width = "200px",
+            shiny::selectInput(
+              "station_fc",
+              "Station",
+              choices = azmetr::station_info$meta_station_name,
+              multiple = FALSE
+            ),
+            shiny::selectInput(
+              "plot_cols_fc",
+              "Variables",
+              choices = c("Temperature", "Precipitation", "Wind & Sun")
+            )
+          ),
+          plotOutput(outputId = "plot_fc") |> withSpinner(4)
+        )
+      )
     )
   )
 )
@@ -254,6 +286,18 @@ server <- function(input, output, session) {
           format_report_gt(report_fc, fc_daily)
         })
     }
+    output$plot_fc <- 
+      renderPlot({
+        # force reload as soon as input changes
+        input$fcrange
+        
+        cols_fc <- 
+          switch(input$plot_cols_fc,
+                 "Temperature" = cols_daily_temp,
+                 "Precipitation" = cols_daily_precip,
+                 "Wind & Sun" = cols_daily_wind_sun)
+        plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
+      })
   })
   
 }
