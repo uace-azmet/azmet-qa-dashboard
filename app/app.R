@@ -119,6 +119,7 @@ ui <- page_navbar(
     title = "Forecast-based",
     layout_column_wrap(
       width = NULL,
+      height = "100%",
       fill = FALSE,
       # plot area 1.5 times that of table area
       style = css(grid_template_columns = "1fr 1.5fr"),
