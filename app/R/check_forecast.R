@@ -28,6 +28,15 @@ check_forecast <- function(fc_daily) {
       if(!is.null(.error_df)) {
         .error_df |> dplyr::mutate(index = index + .n)
       }
+    })) |> 
+    # make `bad_rows` list-column with slices of data where there are problems
+    mutate(bad_rows = map(error_df, \(.x){
+      if(length(.x$index) > 0) {
+        fc_daily |> 
+          dplyr::slice(.x$index)
+      } else {
+        NA
+      }
     }))
   
   #return

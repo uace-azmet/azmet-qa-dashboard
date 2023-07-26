@@ -59,5 +59,14 @@ check_hourly <- function(hourly) {
                 "`wind_vector_dir` not < 1 for more than 14 hrs") |> 
     
     data.validator::add_results(report)
-  get_results(report)
+  get_results(report) |> 
+    # make `bad_rows` list-column with slices of data where there are problems
+    mutate(bad_rows = map(error_df, \(.x){
+      if(length(.x$index) > 0) {
+        hourly |> 
+          dplyr::slice(.x$index)
+      } else {
+        NA
+      }
+    }))
 }

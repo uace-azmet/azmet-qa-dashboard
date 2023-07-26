@@ -21,7 +21,6 @@ format_report_gt <- function(report, data) {
       n_failed >= warn_at ~ "⚠️️",
       .default = "✅"
     )) |> 
-    mutate(bad_rows = map(error_df, ~dl_btn(.x, data))) |> 
     select(assertion.id, mark, validation = description, n_failed, p_failed, bad_rows) |> 
     mutate(bad_rows = ifelse(
       is.na(bad_rows), #if no bad rows
@@ -54,18 +53,6 @@ format_report_gt <- function(report, data) {
     ) |> 
     fmt_percent(p_failed) |> 
     fmt_markdown(columns = c(validation, bad_rows))
-}
-
-#' helper function to turn the error_df column of a data.validator report into a
-#' list column of tibbles. The `index` column contains the row numbers of the
-#' original data that did not pass validations.
-dl_btn <- function(error_df, data) {
-  if(length(error_df$index) > 0) {
-    data |> 
-      dplyr::slice(error_df$index)
-  } else {
-    NA
-  }
 }
 
 
