@@ -83,7 +83,7 @@ check_daily <- function(daily) {
     
     #use missing dates tibble for "all stations reporting" validation
     mutate(bad_rows = ifelse(
-      table_name == "missing_dates",
+      table_name == "missing_dates" & type == "error",
       list(
         daily |>
           tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = datetime) |>
