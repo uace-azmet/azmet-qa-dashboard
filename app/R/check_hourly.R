@@ -59,5 +59,38 @@ check_hourly <- function(hourly) {
                 "`wind_vector_dir` not < 1 for more than 14 hrs") |> 
     
     data.validator::add_results(report)
-  get_results(report)
+  
+  # Check that all stations are reporting all dates
+  hourly_ts <- 
+    hourly |>
+    #round 23:59:59 to 00:00:00 of next day
+    dplyr::mutate(date_datetime = lubridate::ceiling_date(date_datetime, "hour")) |> 
+    tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = date_datetime)
+  
+  hourly_ts |>
+    tsibble::has_gaps(.full = end()) |> 
+    data.validator::validate(name = 'missing_dates') |>
+    data.validator::validate_cols(isFALSE, .gaps, description = "All stations reporting") |>
+    add_results(report)
+  
+  get_results(report) |> 
+    # make `bad_rows` list-column with slices of data where there are problems
+    mutate(bad_rows = map(error_df, \(.x){
+      if(length(.x$index) > 0) {
+        hourly |> 
+          dplyr::slice(.x$index)
+      } else {
+        NA
+      }
+    })) |> 
+    
+    #use missing dates tibble for "all stations reporting" validation
+    mutate(bad_rows = ifelse(
+      table_name == "missing_dates" & type == "error",
+      list(
+        hourly_ts |>
+          tsibble::count_gaps(.full = end(), .name = c("gap_start", "gap_end", "n_missing"))
+      ),
+      bad_rows
+    ))
 }

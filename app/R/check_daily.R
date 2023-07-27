@@ -10,10 +10,11 @@
 #' check_daily(daily)
 check_daily <- function(daily) {
   report <- data.validator::data_validation_report()
+  
   data.validator::validate(daily, name = "Daily Data") |>
     # Internal consistency checks from 'NWS (1994) TSP 88-21-R2':
     data.validator::validate_if(gte(temp_air_meanC, dwpt_mean, na_pass = TRUE),
-                "`temp_air_meanC` ≥ `dwpt_mean`") |>
+                                "`temp_air_meanC` ≥ `dwpt_mean`") |>
     data.validator::validate_if(
       btwn(
         temp_air_meanC,
@@ -59,6 +60,36 @@ check_daily <- function(daily) {
       description = "`temp_soil_10cm_*` (min ≤ mean ≤ max)"
     ) |>
     data.validator::add_results(report)
-  get_results(report)
+  
+  
+  # Check that all stations are reporting all dates
+  daily |>
+    tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = datetime) |>
+    tsibble::has_gaps(.full = end()) |>
+    data.validator::validate(name = 'missing_dates') |>
+    data.validator::validate_cols(isFALSE, .gaps, description = "All stations reporting") |>
+    add_results(report)
+  
+  get_results(report) |> 
+    # make `bad_rows` list-column with slices of original data where there are problems
+    mutate(bad_rows = map(error_df, \(.x){
+      if(length(.x$index) > 0) {
+        daily |> 
+          dplyr::slice(.x$index)
+      } else {
+        NA
+      }
+    })) |> 
+    
+    #use missing dates tibble for "all stations reporting" validation
+    mutate(bad_rows = ifelse(
+      table_name == "missing_dates" & type == "error",
+      list(
+        daily |>
+          tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = datetime) |>
+          tsibble::count_gaps(.full = end(), .name = c("gap_start", "gap_end", "n_missing"))
+      ),
+      bad_rows
+    ))
   
 }

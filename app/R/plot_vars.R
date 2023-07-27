@@ -10,7 +10,8 @@ cols_daily_precip <-
   c("precip_total_mm",
     "relative_humidity_max",
     "relative_humidity_mean",
-    "relative_humidity_min")
+    "relative_humidity_min",
+    "dwpt_mean") #dwpt is calculated, but including because it's used in validation table
 
 cols_daily_wind_sun <- 
   c("sol_rad_total", 
@@ -25,6 +26,6 @@ cols_daily_wind_sun <-
 
 cols_hourly_temp <- c("temp_airC",  "temp_soil_10cmC", "temp_soil_50cmC")
 
-cols_hourly_precip <- c("precip_total", "relative_humidity")
+cols_hourly_precip <- c("precip_total", "relative_humidity", "dwpt")
 
 cols_hourly_wind_sun <- c("sol_rad_total", "wind_2min_spd_mean_mps", "wind_2min_spd_max_mps", "wind_2min_vector_dir", "wind_spd_max_mps", "wind_spd_mps", "wind_vector_dir", "wind_vector_dir_stand_dev", "wind_vector_magnitude")

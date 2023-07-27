@@ -9,6 +9,13 @@
     ]
   },
   "Packages": {
+    "BH": {
+      "Package": "BH",
+      "Version": "1.81.0-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "68122010f01c4dcfbe58ce7112f2433d"
+    },
     "DBI": {
       "Package": "DBI",
       "Version": "1.1.3",
@@ -95,6 +102,18 @@
       ],
       "Hash": "85986a8a9f63af35ad24a022dfa48fdb"
     },
+    "anytime": {
+      "Package": "anytime",
+      "Version": "0.3.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "BH",
+        "R",
+        "Rcpp"
+      ],
+      "Hash": "74a64813f17b492da9c6afda6b128e3d"
+    },
     "arrow": {
       "Package": "arrow",
       "Version": "12.0.1",
@@ -168,11 +187,11 @@
       "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "cct-datascience",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "uace-azmet",
       "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "61582f9ea6674a3718df879bc887bf50cd802e3e",
-      "RemoteHost": "api.github.com",
+      "RemoteSha": "1c7fc83d8d6bcebf9012c51942e21b56368bf7e5",
       "Requirements": [
         "R",
         "attempt",
@@ -186,7 +205,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "af447f582202c6bc0749cfffdf7de19d"
+      "Hash": "2dc739f7d1e5469eb2c31efd89499f92"
     },
     "backports": {
       "Package": "backports",
@@ -2027,6 +2046,27 @@
         "xfun"
       ],
       "Hash": "e4e357f28c2edff493936b6cb30c3d65"
+    },
+    "tsibble": {
+      "Package": "tsibble",
+      "Version": "1.1.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "anytime",
+        "dplyr",
+        "ellipsis",
+        "generics",
+        "lifecycle",
+        "lubridate",
+        "methods",
+        "rlang",
+        "tibble",
+        "tidyselect",
+        "vctrs"
+      ],
+      "Hash": "a9d10100310663a7583cf7e16a990e6f"
     },
     "tzdb": {
       "Package": "tzdb",
