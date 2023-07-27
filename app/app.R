@@ -22,11 +22,21 @@ ui <- page_navbar(
     #Makes sidebar conditional on active nav tab
     conditionalPanel(
       "input.navbar === 'Daily'",
-      uiOutput("daily_range")
+      uiOutput("daily_range"),
+      checkboxInput(
+        "test_daily",
+        "Use test data",
+        value = FALSE
+      )
     ),
     conditionalPanel(
       "input.navbar === 'Hourly'",
-      uiOutput("hourly_range")
+      uiOutput("hourly_range"),
+      checkboxInput(
+        "test_hourly",
+        "Use test data",
+        value = FALSE
+      )
     ),
     conditionalPanel(
       "input.navbar === 'Forecast-based'",
@@ -201,8 +211,14 @@ server <- function(input, output, session) {
       
       start <- input$dailyrange[1]
       end <- input$dailyrange[2]
+      
+      #temporary just for testing
+      if(input$test_daily) { #
+        daily <- read_csv("testdata_daily.csv") #
+      } else { #
       #query API
       daily <- az_daily(start_date = start, end_date = end)
+      } #
       output$check_daily <- gt::render_gt({
         #reload when input changes
         input$dailyrange
@@ -235,8 +251,14 @@ server <- function(input, output, session) {
       
       start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
       end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
+      
+      #temporary for testing
+      if(input$test_hourly) { #
+        hourly <- read_csv("testdata_hourly.csv") #
+      } else { #
       #query API
-      hourly <- az_hourly(start_date_time = start, end_date_time = end)
+        hourly <- az_hourly(start_date_time = start, end_date_time = end)
+      } #
       
       output$check_hourly <- gt::render_gt({
         # force reload as soon as input changes
