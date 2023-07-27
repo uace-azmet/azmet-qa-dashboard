@@ -9,7 +9,7 @@ format_report_gt <- function(report, data) {
   #TODO make these arguments so they can be adjusted in the dashboard maybe?
   #TODO would it be possible to add a header to the table that displays these thresholds?
   warn_at <- 1 #warn if ≥ 1 row fails a validation
-  error_at <- 0.05 #error if ≥ 5% of rows fail validation
+  error_at <- 0.01 #error if ≥ 1% of rows fail validation
   
   report |> 
     #for some reason, report has duplicated rows. Seems like a bug in data.validator
