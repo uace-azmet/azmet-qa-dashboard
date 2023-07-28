@@ -57,7 +57,33 @@ check_hourly <- function(hourly) {
                 "`wind_spd_mps` not < 0.1 for more than 14 hrs") |> 
     validate_if(wind_vector_dir_14 | is.na(wind_vector_dir_14),
                 "`wind_vector_dir` not < 1 for more than 14 hrs") |> 
-    
+    data.validator::validate_if(
+      !is.na(temp_soil_10cmC) &
+        !is.na(temp_soil_50cmC) |
+        meta_station_id %in% c("az28", "az40", "az42", "az43"),
+      description = "Soil probes reporting"
+    ) |> 
+    data.validator::validate_if(
+      !is.na(relative_humidity) &
+        !is.na(temp_airC),
+      description = "Temp and RH sensors reporting"
+    ) |> 
+    data.validator::validate_if(
+      #TODO add 2 min wind
+      # Yuma Valley ETo didn't have wind sensors until later
+      !is.na(wind_spd_mps) &
+        !is.na(wind_vector_dir),
+      description = "Wind sensors reporting"
+    ) |> 
+    data.validator::validate_if(
+      !is.na(sol_rad_total),
+      description = "Pyranometer reporting"
+    ) |> 
+    data.validator::validate_if(
+      !is.na(precip_total) |
+        meta_station_id %in% c("az42", "az43"), #no rain gauge here
+      description = "Rain gauge reporting"
+    ) |> 
     data.validator::add_results(report)
   
   # Check that all stations are reporting all dates

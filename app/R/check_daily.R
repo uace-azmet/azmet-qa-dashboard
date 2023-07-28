@@ -59,6 +59,36 @@ check_daily <- function(daily) {
       ),
       description = "`temp_soil_10cm_*` (min ≤ mean ≤ max)"
     ) |>
+    data.validator::validate_if(
+      !is.na(temp_soil_10cm_meanC) &
+        !is.na(temp_soil_50cm_meanC) |
+        meta_station_id %in% c("az28", "az40", "az42", "az43"), #no soil probes here
+      description = "Soil probes reporting"
+    ) |>
+    data.validator::validate_if(
+      !is.na(relative_humidity_mean) &
+        !is.na(temp_air_meanC),
+      description = "Temp and RH sensors reporting"
+    ) |> 
+    data.validator::validate_if(
+      #TODO:
+      # wind sensors weren't installed at Yuma Valley ETo until later
+      # 2min wind variables weren't collected until later
+      !is.na(wind_spd_mean_mps) &
+        # !is.na(wind_2min_spd_mean_mps) & #would need to also include datetime > start of collection
+        # !is.na(wind_2min_vector_dir) &
+        !is.na(wind_vector_dir),
+      description = "Wind sensors reporting"
+    ) |> 
+    data.validator::validate_if(
+      !is.na(sol_rad_total),
+      description = "Pyranometer reporting"
+    ) |> 
+    data.validator::validate_if(
+      !is.na(precip_total_mm) |
+        meta_station_id %in% c("az42", "az43"), #no rain gauge here
+      description = "Rain gauge reporting"
+    ) |> 
     data.validator::add_results(report)
   
   
