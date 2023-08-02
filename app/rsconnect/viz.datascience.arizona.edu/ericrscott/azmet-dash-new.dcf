@@ -5,9 +5,9 @@ account: ericrscott
 server: viz.datascience.arizona.edu
 hostUrl: https://viz.datascience.arizona.edu/__api__
 appId: 792
-bundleId: 3029
+bundleId: 3089
 url: https://viz.datascience.arizona.edu:443/content/70034627-bc75-4cc3-93ce-fe8e18ab0602/
-when: 1689801729.20175
-lastSyncTime: 1689801729.20176
+when: 1691006341.16977
+lastSyncTime: 1691006341.16978
 asMultiple: FALSE
 asStatic: FALSE
