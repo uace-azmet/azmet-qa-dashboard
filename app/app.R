@@ -47,6 +47,7 @@ ui <- page_navbar(
   nav_panel(
     title = "Daily",
     layout_column_wrap(
+      height = "100%",
       width = NULL,
       fill = FALSE,
       # plot area 1.5 times that of table area
@@ -81,7 +82,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precipitation", "Wind & Sun")
             )
           ),
-          plotOutput(outputId = "plot_daily") |> withSpinner(4)
+          plotOutput(outputId = "plot_daily", height = 550) |> withSpinner(4)
         )
       )
     )
@@ -90,6 +91,7 @@ ui <- page_navbar(
   nav_panel(
     title = "Hourly",
     layout_column_wrap(
+      height = "100%",
       width = NULL,
       fill = FALSE,
       # plot area 1.5 times that of table area
@@ -119,7 +121,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precipitation", "Wind & Sun")
             )
           ),
-          plotOutput(outputId = "plot_hourly") |> withSpinner(4)
+          plotOutput(outputId = "plot_hourly", height = 550) |> withSpinner(4)
         )
       )
     )
@@ -136,7 +138,9 @@ ui <- page_navbar(
       card(
         full_screen = TRUE,
         card_header(
-          "Forecast-Based Validation"
+          "Forecast-Based Validation",
+          # TODO: add a button to the header that opens a popup (modal dialog)
+          # shiny::actionButton("about-forecast", )
         ),
         gt_output(outputId = "check_forecast") |> withSpinner(4)
       ),
@@ -158,7 +162,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precipitation", "Wind & Sun")
             )
           ),
-          plotOutput(outputId = "plot_fc") |> withSpinner(4)
+          plotOutput(outputId = "plot_fc", height = 550) |> withSpinner(4)
         )
       )
     )
