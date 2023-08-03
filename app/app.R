@@ -7,6 +7,7 @@ library(pins)
 library(arrow)
 library(bslib)
 library(shinycssloaders)
+library(shinyWidgets)
 
 source("R/helpers.R")
 source("R/check_daily.R")
@@ -173,38 +174,47 @@ server <- function(input, output, session) {
   
   # Date selector inputs -----
   output$daily_range <- renderUI({
-    dateRangeInput(
-      "dailyrange",
-      "Date Range",
-      start = Sys.Date() - 14,
-      end = Sys.Date(),
-      min = ymd("2020-12-30"),
-      max = Sys.Date(),
-      format = "mm/dd/yy"
+    myAirDatepickerInput(
+      inputId = "dailyrange",
+      label = "Date Range",
+      value = c(Sys.Date() - 14, Sys.Date()),
+      range = TRUE,
+      separator = "–",
+      dateFormat = "MM/dd/yy",
+      minDate = "2020-12-30",
+      maxDate = Sys.Date(),
+      update_on = "close",
+      addon = "none"
     )
   })
   
   output$hourly_range <- renderUI({
-    dateRangeInput(
-      "hourlyrange",
-      "Date Range",
-      start = Sys.Date() - 2, #only 2 days because hourly
-      end = Sys.Date(),
-      min = ymd("2020-12-30"),
-      max = Sys.Date(),
-      format = "mm/dd/yy"
+    myAirDatepickerInput(
+      inputId = "hourlyrange",
+      label = "Date Range",
+      value = c(Sys.Date() - 2, Sys.Date()), #only 2 days because hourly
+      range = TRUE,
+      separator = "–",
+      dateFormat = "MM/dd/yy",
+      minDate = "2020-12-30",
+      maxDate = Sys.Date(),
+      update_on = "close",
+      addon = "none"
     )
   })
   
   output$fc_range <- renderUI({
-    dateRangeInput(
-      "fcrange",
-      "Date Range",
-      start = Sys.Date() - 14,
-      end = Sys.Date(),
-      min = ymd("2020-12-30"),
-      max = Sys.Date(),
-      format = "mm/dd/yy"
+    myAirDatepickerInput(
+      inputId = "fcrange",
+      label = "Date Range",
+      value = c(Sys.Date() - 14, Sys.Date()), #only 2 days because hourly
+      range = TRUE,
+      separator = "–",
+      dateFormat = "MM/dd/yy",
+      minDate = "2020-12-30",
+      maxDate = Sys.Date(),
+      update_on = "close",
+      addon = "none"
     )
   })
   
