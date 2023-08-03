@@ -27,7 +27,8 @@ jobs:
           use-public-rspm: true
       
       - name: Install udunits2
-        run: apt-get install libudunits2-dev
+        run: |
+          sudo apt-get install libudunits2-dev
           
       - uses: r-lib/actions/setup-renv@v2
         with:
