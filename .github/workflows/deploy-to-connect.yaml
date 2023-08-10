@@ -43,7 +43,6 @@ jobs:
           if (!requireNamespace("packrat", quietly = TRUE)) install.packages("packrat")
           if (!requireNamespace("rsconnect", quietly = TRUE)) install.packages("rsconnect")
           if (!requireNamespace("Cairo", quietly = TRUE)) install.packages("Cairo")
-          options(shiny.usecairo = TRUE) #to fix bad aliasing in plots
           
       - name: Generate manifest.json
         run: |
@@ -55,11 +54,14 @@ jobs:
 
       - name: Deploy to RStudio Connect
         uses: rstudio/actions/connect-publish@main
+        env:
+         SHINY_USECAIRO: true
         with:
           url: https://${{ secrets.CONNECT_APIKEY }}@${{ secrets.CONNECT_URL }}
           access-type: ${{ env.ACCESS_TYPE }}
           show-logs: true
           force: true
-          dir: ${{ env.APP_DIR }}/:${{ env.APP_NAME }}
+          dir: |
+            ./${{ env.APP_DIR }}/:${{ env.APP_NAME }}
           require-vanity-path: true
  
