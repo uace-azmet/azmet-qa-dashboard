@@ -6,6 +6,7 @@ library(gt)
 library(pins)
 library(arrow)
 library(bslib)
+library(bsicons)
 library(shinycssloaders)
 library(shinyWidgets)
 
@@ -27,7 +28,11 @@ ui <- page_navbar(
       uiOutput("daily_range"),
       checkboxInput(
         "test_daily",
-        "Use test data",
+        span("Use test data",
+             tooltip(
+               bs_icon("info-circle"),
+               "Use fake data with known errors for all validations"
+             )),
         value = FALSE
       )
     ),
@@ -36,7 +41,11 @@ ui <- page_navbar(
       uiOutput("hourly_range"),
       checkboxInput(
         "test_hourly",
-        "Use test data",
+        span("Use test data",
+             tooltip(
+               bs_icon("info-circle"),
+               "Use fake data with known errors for all validations"
+             )),
         value = FALSE
       )
     ),
@@ -140,8 +149,10 @@ ui <- page_navbar(
         full_screen = TRUE,
         card_header(
           "Forecast-Based Validation",
-          # TODO: add a button to the header that opens a popup (modal dialog)
-          # shiny::actionButton("about-forecast", )
+          tooltip(
+            bs_icon("info-circle"),
+            "tooltip message"
+          )
         ),
         gt_output(outputId = "check_forecast") |> withSpinner(4)
       ),
@@ -230,8 +241,8 @@ server <- function(input, output, session) {
       if(input$test_daily) { #
         daily <- read_csv("testdata_daily.csv") #
       } else { #
-      #query API
-      daily <- az_daily(start_date = start, end_date = end)
+        #query API
+        daily <- az_daily(start_date = start, end_date = end)
       } #
       output$check_daily <- gt::render_gt({
         #reload when input changes
@@ -270,7 +281,7 @@ server <- function(input, output, session) {
       if(input$test_hourly) { #
         hourly <- read_csv("testdata_hourly.csv") #
       } else { #
-      #query API
+        #query API
         hourly <- az_hourly(start_date_time = start, end_date_time = end)
       } #
       
