@@ -29,7 +29,10 @@ jobs:
       - name: Install udunits2
         run: |
           sudo apt-get install libudunits2-dev
-          
+      - name: Remove `.Rprofile`
+        shell: bash
+        run: |
+          rm .Rprofile
       - uses: r-lib/actions/setup-renv@v2
         with:
           cache-version: 3
