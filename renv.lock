@@ -116,7 +116,7 @@
     },
     "arrow": {
       "Package": "arrow",
-      "Version": "12.0.1.1",
+      "Version": "12.0.1",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
@@ -134,7 +134,7 @@
         "utils",
         "vctrs"
       ],
-      "Hash": "9ff9955a1766e0bc3493f06d8f43c97e"
+      "Hash": "6f47141e9d2f266b3cd87ac0cb013031"
     },
     "askpass": {
       "Package": "askpass",
