@@ -15,7 +15,7 @@ jobs:
   deploy-to-connect:
     runs-on: ubuntu-latest
     env:
-      APP_NAME: "azmet-qa-dashboard" #edit this
+      APP_NAME: "azmet-qaqc-dashboard" #edit this
       APP_DIR: "app"
       ACCESS_TYPE: "logged_in" #options are "all", "logged_in", or "acl"
       
