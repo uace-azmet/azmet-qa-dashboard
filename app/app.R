@@ -14,6 +14,11 @@ source("R/helpers.R")
 source("R/check_daily.R")
 source("R/format_report_gt.R")
 
+fc_popup <- popover(
+  bs_icon("info-circle"),
+  markdown("For these validations, a timeseries model is fit to past data, a forecast for the current day is made, and that forecast is compared to observed values. If observed values are outside the 99% predictive interval of the forecast then the value doesn't pass the validation. Interpret these validations with caution—a failing validation does not necessarily mean there is a problem with the data and could just represent an extreme event. Read more about the model specifics [here](https://github.com/uace-azmet/azmet-forecast-qa#readme).")
+)
+
 # UI -----
 ui <- page_navbar(
   # Application title
@@ -149,10 +154,8 @@ ui <- page_navbar(
         full_screen = TRUE,
         card_header(
           "Forecast-Based Validation",
-          tooltip(
-            bs_icon("info-circle"),
-            "tooltip message"
-          )
+          fc_popup,
+          class = "d-flex justify-content-between"
         ),
         gt_output(outputId = "check_forecast") |> withSpinner(4)
       ),
