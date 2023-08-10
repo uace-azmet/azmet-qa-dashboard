@@ -20,6 +20,7 @@ ui <- page_navbar(
   id = "navbar",
   ## Sidebar ----
   sidebar = sidebar(
+    bg = "darkgrey",
     #Makes sidebar conditional on active nav tab
     conditionalPanel(
       "input.navbar === 'Daily'",
@@ -53,7 +54,6 @@ ui <- page_navbar(
       fill = FALSE,
       # plot area 1.5 times that of table area
       style = css(grid_template_columns = "1fr 1.5fr"),
-      
       #card for validation table
       card(
         # max_height = 250,
@@ -179,7 +179,7 @@ server <- function(input, output, session) {
       label = "Date Range",
       value = c(Sys.Date() - 14, Sys.Date()),
       range = TRUE,
-      separator = "–",
+      separator = " – ",
       dateFormat = "MM/dd/yy",
       minDate = "2020-12-30",
       maxDate = Sys.Date(),
@@ -194,7 +194,7 @@ server <- function(input, output, session) {
       label = "Date Range",
       value = c(Sys.Date() - 2, Sys.Date()), #only 2 days because hourly
       range = TRUE,
-      separator = "–",
+      separator = " – ",
       dateFormat = "MM/dd/yy",
       minDate = "2020-12-30",
       maxDate = Sys.Date(),
@@ -209,7 +209,7 @@ server <- function(input, output, session) {
       label = "Date Range",
       value = c(Sys.Date() - 14, Sys.Date()), #only 2 days because hourly
       range = TRUE,
-      separator = "–",
+      separator = " – ",
       dateFormat = "MM/dd/yy",
       minDate = "2020-12-30",
       maxDate = Sys.Date(),
