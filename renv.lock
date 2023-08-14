@@ -187,11 +187,11 @@
       "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "uace-azmet",
       "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "1c7fc83d8d6bcebf9012c51942e21b56368bf7e5",
+      "RemoteSha": "b22d074852c6e98491445cdd543a46df6c0ded11",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "R",
         "attempt",
@@ -205,7 +205,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "2dc739f7d1e5469eb2c31efd89499f92"
+      "Hash": "0e0690c1c163fb1b16593cd73f5e5c09"
     },
     "backports": {
       "Package": "backports",
@@ -1456,13 +1456,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.0",
-      "Source": "Repository",
+      "Version": "1.0.1",
+      "OS_type": null,
       "Repository": "CRAN",
-      "Requirements": [
-        "utils"
-      ],
-      "Hash": "c321cd99d56443dbffd1c9e673c0c1a2"
+      "Source": "Repository"
     },
     "reprex": {
       "Package": "reprex",
