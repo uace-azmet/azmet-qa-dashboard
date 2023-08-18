@@ -10,6 +10,7 @@ library(bsicons)
 library(shinycssloaders)
 library(shinyWidgets)
 library(plotly)
+library(slider)
 
 source("R/helpers.R")
 source("R/check_daily.R")
@@ -191,9 +192,10 @@ ui <- page_navbar(
   nav_panel(
     title = "Battery",
     layout_column_wrap(
-      width = 1/2,
+      width = NULL,
       height = "100%",
       fill = FALSE,
+      style = css(grid_template_columns = "1fr 1.5fr"),
       card(
         full_screen = TRUE,
         card_header(
@@ -206,7 +208,7 @@ ui <- page_navbar(
         card_header(
           "Daily Data"
         ),
-        plotlyOutput(outputId = "plot_battery_daily") |> withSpinner(4)
+        plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
       ),
       card(
         full_screen = TRUE,
@@ -220,7 +222,7 @@ ui <- page_navbar(
         card_header(
           "Hourly Data"
         ),
-        plotlyOutput(outputId = "plot_battery_hourly") |> withSpinner(4)
+        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
       )
     )
   )
@@ -444,7 +446,7 @@ server <- function(input, output, session) {
       })
       
       output$plot_battery_hourly <- renderPlotly({
-        h_time <- 
+        h_time <-
           ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
           geom_line(aes(color = meta_station_id)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
@@ -452,8 +454,7 @@ server <- function(input, output, session) {
           geom_hline(aes(yintercept = 20), color = "red") +
           scale_y_continuous(limits = range(hourly$meta_bat_volt, na.rm = TRUE)) +
           theme_bw() +
-          theme(legend.position = "none") +
-          labs(title= "Hourly")
+          theme(legend.position = "none",  axis.title.x = element_blank())
         ggplotly(h_time)
       })
       
@@ -474,8 +475,7 @@ server <- function(input, output, session) {
                        max(daily$meta_bat_volt_max, na.rm = TRUE))
           ) +
           theme_bw() +
-          theme(legend.position = "none") +
-          labs(title = "daily")
+          theme(legend.position = "none", axis.title.x = element_blank())
         
         ggplotly(h_daily)
       })
