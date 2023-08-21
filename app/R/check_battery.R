@@ -60,7 +60,7 @@ check_battery_hourly <- function(hourly) {
     # make `bad_rows` list-column with slices of original data where there are problems
     mutate(bad_rows = map(error_df, \(.x){
       if(length(.x$index) > 0) {
-        daily |> 
+        hourly |> 
           dplyr::slice(.x$index)
       } else {
         NA
