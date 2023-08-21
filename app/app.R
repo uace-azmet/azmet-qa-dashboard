@@ -9,6 +9,8 @@ library(bslib)
 library(bsicons)
 library(shinycssloaders)
 library(shinyWidgets)
+library(plotly)
+library(slider)
 
 source("R/helpers.R")
 source("R/check_daily.R")
@@ -57,6 +59,10 @@ ui <- page_navbar(
     conditionalPanel(
       "input.navbar === 'Forecast-based'",
       uiOutput("fc_range")
+    ),
+    conditionalPanel(
+      "input.navbar === 'Battery'",
+      uiOutput("battery_range")
     )
   ), 
   ## Daily ----
@@ -181,6 +187,44 @@ ui <- page_navbar(
         )
       )
     )
+  ),
+  ## Battery ----
+  nav_panel(
+    title = "Battery",
+    layout_column_wrap(
+      width = NULL,
+      height = "100%",
+      fill = FALSE,
+      style = css(grid_template_columns = "1fr 1.5fr"),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Daily Data"
+        ),
+        gt_output(outputId = "check_battery_daily") |> withSpinner(4)
+      ),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Daily Data"
+        ),
+        plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
+      ),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Hourly Data"
+        ),
+        gt_output(outputId = "check_battery_hourly") |> withSpinner(4)
+      ),
+      card(
+        full_screen = TRUE,
+        card_header(
+          "Hourly Data"
+        ),
+        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
+      )
+    )
   )
 )
 
@@ -191,12 +235,12 @@ server <- function(input, output, session) {
     myAirDatepickerInput(
       inputId = "dailyrange",
       label = "Date Range",
-      value = c(Sys.Date() - 14, Sys.Date()),
+      value = c(Sys.Date() - 15, Sys.Date() - 1),
       range = TRUE,
       separator = " – ",
       dateFormat = "MM/dd/yy",
       minDate = "2020-12-30",
-      maxDate = Sys.Date(),
+      maxDate = Sys.Date() - 1,
       update_on = "close",
       addon = "none"
     )
@@ -206,7 +250,7 @@ server <- function(input, output, session) {
     myAirDatepickerInput(
       inputId = "hourlyrange",
       label = "Date Range",
-      value = c(Sys.Date() - 2, Sys.Date()), #only 2 days because hourly
+      value = c(Sys.Date() - 7, Sys.Date()), #only 7 days because hourly
       range = TRUE,
       separator = " – ",
       dateFormat = "MM/dd/yy",
@@ -221,7 +265,22 @@ server <- function(input, output, session) {
     myAirDatepickerInput(
       inputId = "fcrange",
       label = "Date Range",
-      value = c(Sys.Date() - 14, Sys.Date()), #only 2 days because hourly
+      value = c(Sys.Date() - 15, Sys.Date() - 1),
+      range = TRUE,
+      separator = " – ",
+      dateFormat = "MM/dd/yy",
+      minDate = "2020-12-30",
+      maxDate = Sys.Date() - 1,
+      update_on = "close",
+      addon = "none"
+    )
+  })
+  
+  output$battery_range <- renderUI({
+    myAirDatepickerInput(
+      inputId = "batteryrange",
+      label = "Date Range",
+      value = c(Sys.Date() - 7, Sys.Date()),
       range = TRUE,
       separator = " – ",
       dateFormat = "MM/dd/yy",
@@ -350,6 +409,78 @@ server <- function(input, output, session) {
         plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
       })
   })
+  
+  
+  # Battery tab -------------------------------------------------------------
+  
+  observe({
+    if(input$navbar == "Battery") {
+      req(input$batteryrange)
+      
+      start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
+      end   <- input$batteryrange[2] |> as.POSIXct() |> format_ISO8601()
+      
+      daily <- az_daily(start_date = start, end_date = end)
+      hourly <- az_hourly(start_date_time = start, end_date_time = end)
+      
+      output$check_battery_daily <- gt::render_gt({
+        # force reload as soon as input changes
+        input$batteryrange
+        
+        #do validation report
+        report_battery_daily <- check_battery_daily(daily)
+        
+        #convert to gt table
+        format_report_gt(report_battery_daily, daily)
+      })
+      
+      output$check_battery_hourly <- gt::render_gt({
+        # force reload as soon as input changes
+        input$batteryrange
+        
+        #do validation report
+        report_battery_hourly <- check_battery_hourly(hourly)
+        
+        #convert to gt table
+        format_report_gt(report_battery_hourly, hourly)
+      })
+      
+      output$plot_battery_hourly <- renderPlotly({
+        h_time <-
+          ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
+          geom_line(aes(color = meta_station_id)) +
+          geom_hline(aes(yintercept = 9.6), color = "red") +
+          geom_hline(aes(yintercept = 16), color = "orange") +
+          geom_hline(aes(yintercept = 20), color = "red") +
+          scale_y_continuous(limits = range(hourly$meta_bat_volt, na.rm = TRUE)) +
+          theme_bw() +
+          theme(legend.position = "none",  axis.title.x = element_blank())
+        ggplotly(h_time)
+      })
+      
+      output$plot_battery_daily <- renderPlotly({
+        h_daily <-
+          daily |> 
+          ggplot(aes(x = datetime, y = meta_bat_volt_mean)) +
+          geom_ribbon(aes(ymin = meta_bat_volt_min,
+                          ymax = meta_bat_volt_max,
+                          fill = meta_station_id),
+                      alpha = 0.15) +
+          geom_line(aes(color = meta_station_id)) +
+          geom_hline(aes(yintercept = 9.6), color = "red") +
+          geom_hline(aes(yintercept = 16), color = "orange") +
+          geom_hline(aes(yintercept = 20), color = "red") +
+          scale_y_continuous(
+            limits = c(min(daily$meta_bat_volt_min, na.rm = TRUE),
+                       max(daily$meta_bat_volt_max, na.rm = TRUE))
+          ) +
+          theme_bw() +
+          theme(legend.position = "none", axis.title.x = element_blank())
+        
+        ggplotly(h_daily)
+      })
+    }
+  })  
   
 }
 
