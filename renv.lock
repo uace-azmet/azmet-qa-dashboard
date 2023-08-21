@@ -1511,13 +1511,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "RSPM",
-      "Requirements": [
-        "utils"
-      ],
-      "Hash": "6523639dd021b32c3199a41cbe6db340"
+      "Version": "1.0.2",
+      "OS_type": null,
+      "Repository": "CRAN",
+      "Source": "Repository"
     },
     "reprex": {
       "Package": "reprex",
