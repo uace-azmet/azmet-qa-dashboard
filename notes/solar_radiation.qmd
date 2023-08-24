@@ -27,7 +27,8 @@ Looking for MJ/m^2^ or possibly W/m^2^ which includes time in the denominator
 We can get a bunch of data about solar radiation with `fishmethods::astrocalc4r()`
 
 ```{r}
-library(fishmethods)
+# library(fishmethods)
+source("../app/R/astrocalc4r.R")
 
 hourly_sol <- 
   hourly |> 
@@ -55,8 +56,8 @@ hourly_sol <-
     date_doy,
     sol_rad_total) |> 
   bind_cols(hourly_sol) |> 
-  rename(par = PAR) |> 
-  mutate(par = set_units(par, "lux"))
+  rename(sol_rad_max = TOT, par = PAR) |> 
+  mutate(sol_rad_max = set_units(sol_rad_max, "lx"), par = set_units(par, "lx"))
 ```
 
 ## PAR (not what we want)
@@ -65,13 +66,14 @@ This gives us PAR in units of lux, which unfortunately is too small of a slice o
 Here is how it can be converted to comparable units, just in case that is useful later.
 
 ```{r}
-sunlight <- set_units(0.0079, "(W/m^2) / Lux") # approximate.
+# sunlight <- set_units(0.0079, "(W/m^2) / lx") # approximate.
+sunlight <- set_units(1, "(W/m^2) / lx")
 # https://physics.stackexchange.com/questions/135618/rm-lux-and-w-m2-relationship
 
 hourly_sol <- 
   hourly_sol |> 
-  mutate(par = par * sunlight) |> 
-  mutate(par = set_units(par, "MJ m-2 hr-1") * set_units(1, "hr"))
+  mutate(sol_rad_max = sol_rad_max * sunlight) |> 
+  mutate(sol_rad_max = set_units(sol_rad_max, "MJ m-2 hr-1") * set_units(1, "hr"))
 ```
 
 Now we can plot this maybe
@@ -80,7 +82,7 @@ Now we can plot this maybe
 hourly_sol |> 
   ggplot(aes(x = date_datetime)) +
   geom_line(aes(y = sol_rad_total)) +
-  geom_line(aes(y = par), color = "red") +
+  geom_line(aes(y = sol_rad_max), color = "red") +
   facet_wrap(~meta_station_id)
 ```
 
