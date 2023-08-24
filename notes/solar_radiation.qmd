@@ -9,8 +9,9 @@ bibliography: references.bib
 library(azmetr)
 library(tidyverse)
 library(units)
-daily <- az_daily(start_date = "2023-01-01")
-hourly <- az_hourly(start_date_time = "2023-08-19 00")
+daily <- az_daily(start_date = "2022-01-01", end_date = "2023-01-01")
+hourly <- az_hourly(start_date_time = "2022-04-15 00", end = "2022-04-17 00") |> 
+  mutate(date_datetime = floor_date(date_datetime - seconds(1), unit = "hours"))
 
 daily <- daily |> az_add_units()
 hourly <- hourly |> az_add_units()
@@ -24,7 +25,14 @@ Looking for MJ/m^2^ or possibly W/m^2^ which includes time in the denominator
 
 ## Parameter estimates
 
-We can get a bunch of data about solar radiation with `fishmethods::astrocalc4r()`
+We can get a bunch of data about solar radiation with `fishmethods::astrocalc4r()` .
+Unfortunately, total solar radiation is not one of them.
+The help file for the function instructs the reader to modify the code to calculate total solar radiation!
+
+> `astrocalc4r` calculates PAR for wavelengths between 400-700 nm.
+> Calculations for other wavelengths can be carried out by modifying the code to use parameters from Frouin et al. (1989).
+
+So, that's what I did below using the coefficients from tables 1 and 2 of @frouin.
 
 ```{r}
 # library(fishmethods)
@@ -39,7 +47,8 @@ hourly_sol <-
       day = mday(date_datetime),
       month = month(date_datetime),
       year = year(date_datetime),
-      hour = hour(date_datetime),
+      hour = hour(date_datetime) + 0.5, #we want solar radiation for the middle of the previous hour, I guess?
+      # hour = ((date_datetime |> as_hms() |> as.numeric())/3600) - 0.5,
       timezone = tz,
       lat = latitude,
       lon = longitude,
@@ -60,15 +69,12 @@ hourly_sol <-
   mutate(sol_rad_max = set_units(sol_rad_max, "lx"), par = set_units(par, "lx"))
 ```
 
-## PAR (not what we want)
+## Total Solar Radiation
 
-This gives us PAR in units of lux, which unfortunately is too small of a slice of wavelenghts to be comparable to the total solar radiation data.
-Here is how it can be converted to comparable units, just in case that is useful later.
+This gives us an hourly total solar radiation maximum in units of lux, which are approximately equal to W/m^2^ for sunlight.
 
 ```{r}
-# sunlight <- set_units(0.0079, "(W/m^2) / lx") # approximate.
 sunlight <- set_units(1, "(W/m^2) / lx")
-# https://physics.stackexchange.com/questions/135618/rm-lux-and-w-m2-relationship
 
 hourly_sol <- 
   hourly_sol |> 
@@ -84,62 +90,77 @@ hourly_sol |>
   geom_line(aes(y = sol_rad_total)) +
   geom_line(aes(y = sol_rad_max), color = "red") +
   facet_wrap(~meta_station_id)
+
+hourly_sol |> 
+  filter(sol_rad_total > sol_rad_max) |> 
+  mutate(d_sol = sol_rad_total - sol_rad_max) |> 
+  select(meta_station_id, date_datetime, sol_rad_total, sol_rad_max, d_sol) |> 
+  arrange(desc(d_sol))
 ```
 
-> `astrocalc4r` calculates PAR for wavelengths between 400-700 nm.
-> Calculations for other wavelengths can be carried out by modifying the code to use parameters from Frouin et al. (1989).
+Hmm... looks phase-shifted.
+Maybe its off by an hour or something?
 
-So, it might be possible to dig into the code and modify it.
+## Modify for daily
 
-## Extraterrestrial Radiation
-
-We can estimate radiation to the outside of the atmosphere using the zenith and solar constant
+The above code gives hourly max solar radiation, but we want to use this for the daily data as well, so we should be able to just sum by day.
 
 ```{r}
-zenith_to_sol_rad <- function(zenith){
-  foo <-  function(zenith) {
-
-    #convert to radians
-    zenith_rad <- zenith * pi / 180
-    #cos zenith angle
-    cosz <- cos(zenith_rad)
-    #assume 0 radiation when angle ≥ 90
-    if(zenith >= 90) {
-      radiation <- 0
-    } else {
-      #multiply by "solar constant" 
-      radiation <-  cosz * 1358.2 #W/m^2 for 250-4000nm range
-    }
-    radiation
-  }
-  radiation <- purrr:::map_dbl(zenith, foo)
-
-  set_units(radiation, "W/m^2")
-}
-
-hourly_sol <- 
-  hourly_sol |> 
-  mutate(sol_potential = (zenith_to_sol_rad(zenith) * set_units(1, "hr")) |> 
-           set_units("MJ/m^2"))
+hourly_sol |> 
+  mutate(date = floor_date(date_datetime, "day")) |> 
+  group_by(date, meta_station_id) |> 
+  summarise(
+    sol_rad_total = sum(sol_rad_total)
+  )
 ```
 
+We want to avoid having to get hourly data to validate daily data though so let's actually not use this approach.
+Let's start with daily data.
+
 ```{r}
-ggplot(hourly_sol, aes(x = date_datetime)) +
+source("../app/R/astrocalc4r.R")
+daily <- left_join(daily, station_info)
+
+daily_expand <-
+  daily |> 
+  select(meta_station_id, datetime, latitude, longitude) |> 
+  expand_grid(hour = 0:23) |> 
+  mutate(date_datetime = datetime + hours(hour)) |> 
+  add_column(tz = -7) 
+
+daily_sol_hr <- 
+  daily_expand |>
+  reframe(
+    astrocalc4r(
+      day = mday(date_datetime),
+      month = month(date_datetime),
+      year = year(date_datetime),
+      hour = hour(date_datetime),
+      timezone = tz,
+      lat = latitude,
+      lon = longitude,
+      withinput = FALSE,
+      seaorland = "continental"
+    )
+  ) |> bind_cols(daily_expand) 
+
+
+daily_sol <- daily_sol_hr |> 
+  summarize(sol_rad_max = sum(TOT),
+            .by = c(datetime, meta_station_id)) |> 
+  mutate(sol_rad_max = set_units(sol_rad_max, "lx")) |> 
+  mutate(sol_rad_max = sol_rad_max * sunlight) |> 
+  mutate(sol_rad_max = set_units(sol_rad_max, "MJ m-2 h-1") * set_units(1, "h"))
+
+daily <- left_join(daily, daily_sol) 
+
+daily |> 
+  ggplot(aes(x = datetime)) +
+  facet_wrap(~meta_station_id) +
   geom_line(aes(y = sol_rad_total)) +
-  geom_line(aes(y = sol_potential), color = "red") +
-  facet_wrap(~meta_station_id)
-```
+  geom_line(aes(y = sol_rad_max), color = "red")
 
-These estimates are obviously too high because they aren't taking into account the atmosphere!
+daily |> filter(sol_rad_total > sol_rad_max) |> 
+  select(starts_with("sol"))
 
-Next steps are either:
-
-1.  Figure out how to mathematically account for atmosphere (e.g., by getting elevation data for sites)
-2.  Empirically estimate some correction factor for each site using all the data.
-3.  Modify `astrocalc4r` to work for a greater range of wavelengths
-
-## Digging into `astrocalc4r`
-
-```{r}
-astrocalc4r
 ```
