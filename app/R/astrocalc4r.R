@@ -176,10 +176,15 @@ astrocalc4r <-
     return(par)
   }
   totcalc <- function(zenith, setting = seaorland) {
-    I0 <- 1358.2
-    V <- 23
-    uv <- 1.4
-    u0 <- 0.34
+    # I0 <- 1358.2
+    I0 <- 1372 #solar constant in W m-2
+    V <- 23 #visibility in km
+    # V <- 50
+    uv <- 1.4 #vertically integrated concentration of water vapor in g cm-2
+    # uv <- 0.5 #dry end
+    # uv <- 0 #turn off water vapor
+    u0 <- 0.34 #vertically integrated concentration of ozone in atm cm
+    # u0 <- 0 #turn off ozone
     r <- 0.05
     d <- 1
     if (!setting %in% c("maritime", "continental")) 
