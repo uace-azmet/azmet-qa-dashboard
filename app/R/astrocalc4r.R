@@ -9,7 +9,7 @@ astrocalc4r <-
             lat,
             lon,
             withinput = FALSE,
-            seaorland = "maritime",
+            seaorland = c("maritime", "continental"),
             acknowledgment = FALSE) {
     
   if (acknowledgment) {
@@ -53,7 +53,10 @@ astrocalc4r <-
   #                        - Larry Jacobson, January 13, 2019
   #
   # timezone=0 if a sign conflict
+  seaorland <- match.arg(seaorland)
+  op <- options("digits")
   options(digits = 9)
+  on.exit(options(op))
   deg2rad <- pi/180
   null.c <- function(x) return(sum(is.null(x)))
   if (sum(null.c(day), null.c(month), null.c(year), null.c(hour), 
@@ -173,7 +176,7 @@ astrocalc4r <-
     return(par)
   }
   totcalc <- function(zenith, setting = seaorland) {
-    I0 <- 531.2
+    I0 <- 1358.2
     V <- 23
     uv <- 1.4
     u0 <- 0.34
@@ -210,10 +213,10 @@ astrocalc4r <-
     xb <- d - r * (a1 + b1/V)
     tot <- I0 * cos(zrad) * exp(-xa/cos(zrad))/xb * xx * 
       xxx
-    tot[zenith > 89.9999] <- 0 #TODO: not sure if we want this correction
+    tot[zenith > 89.9999] <- 0
     return(tot)
   }
-  output <- as.data.frame(matrix(nrow = 0, ncol = 9))
+  output <- as.data.frame(matrix(nrow = 0, ncol = 10))
   names(output) <- c("noon", "sunrise", "sunset", "azimuth", 
                      "zenith", "eqtime", "declin", "daylight", "PAR", "TOT")
   hourtemp <- hour - timezone
@@ -240,9 +243,7 @@ astrocalc4r <-
   xx <- 357.52911 + 35999.05029 * jc - 0.0001537 * jc^2
   gmas <- xx%%360
   eeo <- 0.016708634 - 4.2037e-05 * jc - 1.267e-07 * jc^2
-  scx <- (1.914602 - 0.004817 * jc - 1.4e-05 * jc^2) * sin(gmas * 
-                                                             deg2rad) + (0.019993 - 0.000101 * jc) * sin(2 * gmas * 
-                                                                                                           deg2rad) + 0.000289 * sin(3 * gmas * deg2rad)
+  scx <- (1.914602 - 0.004817 * jc - 1.4e-05 * jc^2) * sin(gmas * deg2rad) + (0.019993 - 0.000101 * jc) * sin(2 * gmas * deg2rad) + 0.000289 * sin(3 * gmas * deg2rad)
   Stl <- gmls + scx
   Sta <- gmas + scx
   srv <- 1.000001018 * (1 - eeo^2)/(1 + eeo * cos(Sta * deg2rad))
@@ -256,10 +257,7 @@ astrocalc4r <-
                  cos(lambda * deg2rad))/deg2rad
   declin <- asin(sin(epsilon * deg2rad) * sin(lambda * deg2rad))/deg2rad
   y <- tan(epsilon * deg2rad/2)^2
-  eqtime <- (y * sin(2 * gmls * deg2rad) - 2 * eeo * sin(gmas * 
-                                                           deg2rad) + 4 * eeo * y * sin(gmas * deg2rad) * cos(2 * 
-                                                                                                                gmls * deg2rad) - y^2 * sin(4 * gmls * deg2rad)/2 - 
-               5/4 * eeo^2 * sin(2 * gmas * deg2rad))/deg2rad * 4
+  eqtime <- (y * sin(2 * gmls * deg2rad) - 2 * eeo * sin(gmas * deg2rad) + 4 * eeo * y * sin(gmas * deg2rad) * cos(2 *  gmls * deg2rad) - y^2 * sin(4 * gmls * deg2rad)/2 - 5/4 * eeo^2 * sin(2 * gmas * deg2rad))/deg2rad * 4
   h0 <- -0.8333 * deg2rad
   phi <- lat * deg2rad
   hangle <- acos((sin(h0) - sin(declin * deg2rad) * sin(phi))/cos(declin * 
@@ -279,8 +277,8 @@ astrocalc4r <-
                                                                                                           zenith) * deg2rad))/deg2rad + 180
   azimuth <- ifelse(tsa > 0, azimuth%%360, 360 - azimuth%%360)
   daylight <- daylight/60
-  PAR <- parcalc(zenith)
-  TOT <- totcalc(zenish)
+  PAR <- parcalc(zenith, seaorland)
+  TOT <- totcalc(zenith, seaorland)
   if (any(is.nan(sunrise))) {
     message(paste("Warning: Polar day/night (daylength 0 or 24 hrs) at record(s):", 
                   (1:times)[is.nan(sunrise)], "\n Check input data (i.e. latitude)?"))
