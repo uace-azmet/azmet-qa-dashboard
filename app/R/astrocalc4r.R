@@ -1,7 +1,17 @@
 #modified version of fishmethods::astrocalc4r().  See help file for that function for more details.
-astrocalc4r <- function (day, month, year, hour, timezone, lat, lon, withinput = FALSE, 
-                      seaorland = "maritime", acknowledgment = FALSE) 
-{
+
+astrocalc4r <-
+  function (day,
+            month,
+            year,
+            hour,
+            timezone,
+            lat,
+            lon,
+            withinput = FALSE,
+            seaorland = "maritime",
+            acknowledgment = FALSE) {
+    
   if (acknowledgment) {
     cat("\n", "---------------------------------------------------------")
     cat("\n", "                AstroCalcPureR Version 2.3")
@@ -162,9 +172,50 @@ astrocalc4r <- function (day, month, year, hour, timezone, lat, lon, withinput =
     par[zenith > 89.9999] <- 0
     return(par)
   }
+  totcalc <- function(zenith, setting = seaorland) {
+    I0 <- 531.2
+    V <- 23
+    uv <- 1.4
+    u0 <- 0.34
+    r <- 0.05
+    d <- 1
+    if (!setting %in% c("maritime", "continental")) 
+      stop("setting value is neither 'maritime' nor 'continental'!")
+    if (setting == "maritime") {
+      a <- 0.059
+      b <- 0.359
+      a1 <- 0.089
+      b1 <- 0.503
+      av <- 0.102
+      bv <- 0.29
+      a0 <- 0.041
+      b0 <- 0.57
+    }
+    else if (setting == "continental") {
+      a <- 0.066
+      b <- 0.704
+      a1 <- 0.088
+      b1 <- 0.456
+      av <- 0.102
+      bv <- 0.29
+      a0 <- 0.041
+      b0 <- 0.57
+    }
+    zrad <- zenith * deg2rad
+    x1 <- uv/cos(zrad)
+    xx <- exp(-av * x1^bv)
+    x2 <- u0/cos(zrad)
+    xxx <- exp(-a0 * x2^b0)
+    xa <- a + b/V
+    xb <- d - r * (a1 + b1/V)
+    tot <- I0 * cos(zrad) * exp(-xa/cos(zrad))/xb * xx * 
+      xxx
+    tot[zenith > 89.9999] <- 0 #TODO: not sure if we want this correction
+    return(tot)
+  }
   output <- as.data.frame(matrix(nrow = 0, ncol = 9))
   names(output) <- c("noon", "sunrise", "sunset", "azimuth", 
-                     "zenith", "eqtime", "declin", "daylight", "PAR")
+                     "zenith", "eqtime", "declin", "daylight", "PAR", "TOT")
   hourtemp <- hour - timezone
   hour <- ifelse(hourtemp > 24, hourtemp - 24, hourtemp)
   change_day <- !(hour == hourtemp)
@@ -229,6 +280,7 @@ astrocalc4r <- function (day, month, year, hour, timezone, lat, lon, withinput =
   azimuth <- ifelse(tsa > 0, azimuth%%360, 360 - azimuth%%360)
   daylight <- daylight/60
   PAR <- parcalc(zenith)
+  TOT <- totcalc(zenish)
   if (any(is.nan(sunrise))) {
     message(paste("Warning: Polar day/night (daylength 0 or 24 hrs) at record(s):", 
                   (1:times)[is.nan(sunrise)], "\n Check input data (i.e. latitude)?"))
@@ -237,7 +289,7 @@ astrocalc4r <- function (day, month, year, hour, timezone, lat, lon, withinput =
   output <- rbind(output, data.frame(noon = noon, sunrise = sunrise, 
                                      sunset = sunset, azimuth = azimuth, zenith = zenith, 
                                      eqtime = eqtime, declin = declin, daylight = daylight, 
-                                     PAR = PAR))
+                                     PAR = PAR, TOT = TOT))
   if (withinput) 
     return(cbind(data.frame(tzone = timezone, day = day, 
                             month = month, year = year, hhour = hour, xlat = lat, 
