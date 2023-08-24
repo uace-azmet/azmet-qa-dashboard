@@ -1,0 +1,143 @@
+---
+title: "Solar Radiation"
+format: html
+editor: visual
+bibliography: references.bib
+---
+
+```{r}
+library(azmetr)
+library(tidyverse)
+library(units)
+daily <- az_daily(start_date = "2023-01-01")
+hourly <- az_hourly(start_date_time = "2023-08-19 00")
+
+daily <- daily |> az_add_units()
+hourly <- hourly |> az_add_units()
+```
+
+Looking for MJ/m^2^ or possibly W/m^2^ which includes time in the denominator
+
+```{r}
+(daily$sol_rad_total[1] / set_units(1, "d") )|> set_units("W/m^2")
+```
+
+## Parameter estimates
+
+We can get a bunch of data about solar radiation with `fishmethods::astrocalc4r()`
+
+```{r}
+library(fishmethods)
+
+hourly_sol <- 
+  hourly |> 
+  left_join(station_info) |> 
+  add_column(tz = -7) |> 
+  reframe(
+    astrocalc4r(
+      day = mday(date_datetime),
+      month = month(date_datetime),
+      year = year(date_datetime),
+      hour = hour(date_datetime),
+      timezone = tz,
+      lat = latitude,
+      lon = longitude,
+      withinput = FALSE,
+      seaorland = "continental"
+    )
+  ) 
+
+hourly_sol <- 
+  hourly |> 
+  select(meta_station_id,
+    meta_station_name,
+    date_datetime,
+    date_doy,
+    sol_rad_total) |> 
+  bind_cols(hourly_sol) |> 
+  rename(par = PAR) |> 
+  mutate(par = set_units(par, "lux"))
+```
+
+## PAR (not what we want)
+
+This gives us PAR in units of lux, which unfortunately is too small of a slice of wavelenghts to be comparable to the total solar radiation data.
+Here is how it can be converted to comparable units, just in case that is useful later.
+
+```{r}
+sunlight <- set_units(0.0079, "(W/m^2) / Lux") # approximate.
+# https://physics.stackexchange.com/questions/135618/rm-lux-and-w-m2-relationship
+
+hourly_sol <- 
+  hourly_sol |> 
+  mutate(par = par * sunlight) |> 
+  mutate(par = set_units(par, "MJ m-2 hr-1") * set_units(1, "hr"))
+```
+
+Now we can plot this maybe
+
+```{r}
+hourly_sol |> 
+  ggplot(aes(x = date_datetime)) +
+  geom_line(aes(y = sol_rad_total)) +
+  geom_line(aes(y = par), color = "red") +
+  facet_wrap(~meta_station_id)
+```
+
+> `astrocalc4r` calculates PAR for wavelengths between 400-700 nm.
+> Calculations for other wavelengths can be carried out by modifying the code to use parameters from Frouin et al. (1989).
+
+So, it might be possible to dig into the code and modify it.
+
+## Extraterrestrial Radiation
+
+We can estimate radiation to the outside of the atmosphere using the zenith and solar constant
+
+```{r}
+zenith_to_sol_rad <- function(zenith){
+  foo <-  function(zenith) {
+
+    #convert to radians
+    zenith_rad <- zenith * pi / 180
+    #cos zenith angle
+    cosz <- cos(zenith_rad)
+    #assume 0 radiation when angle ≥ 90
+    if(zenith >= 90) {
+      radiation <- 0
+    } else {
+      #multiply by "solar constant" 
+      radiation <-  cosz * 1358.2 #W/m^2 for 250-4000nm range
+    }
+    radiation
+  }
+  radiation <- purrr:::map_dbl(zenith, foo)
+
+  set_units(radiation, "W/m^2")
+}
+
+hourly_sol <- 
+  hourly_sol |> 
+  mutate(sol_potential = (zenith_to_sol_rad(zenith) * set_units(1, "hr")) |> 
+           set_units("MJ/m^2"))
+```
+
+```{r}
+ggplot(hourly_sol, aes(x = date_datetime)) +
+  geom_line(aes(y = sol_rad_total)) +
+  geom_line(aes(y = sol_potential), color = "red") +
+  facet_wrap(~meta_station_id)
+```
+
+These estimates are obviously too high because they aren't taking into account the atmosphere!
+
+Next steps are either:
+
+1.  Figure out how to mathematically account for atmosphere (e.g., by getting elevation data for sites)
+2.  Empirically estimate some correction factor for each site using all the data.
+3.  Modify `astrocalc4r` to work for a greater range of wavelengths
+
+## Digging into `astrocalc4r`
+
+```{r}
+astrocalc4r
+```
