@@ -1,9 +1,15 @@
-library(azmetr)
-library(tidyverse)
-library(units)
-library(patchwork)
-# hourly <-  az_hourly(start = "2023-07-01 00", end = "2023-07-18 00")
-# plot_daily(daily)
+#' Create plots for hourly data
+#'
+#' @param hourly tibble returned by `az_hourly()`
+#' @param cols character vector of column names (or tidyselect helper)
+#' @param station character; station name
+#'
+#' @return a patchwork object
+#'
+#' @examples
+#' hourly <-  az_hourly(start = "2023-07-01 00", end = "2023-07-18 00")
+#' plot_hourly(hourly, cols = starts_with("temp_air"))
+#' 
 plot_hourly <- function(hourly, cols, station = "Tucson") {
   hourly_sub <- 
     hourly |> 
