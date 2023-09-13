@@ -152,7 +152,7 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_daily",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
           # Unfortunately it is not easy to get plots to just fill their
@@ -194,7 +194,7 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_hourly",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
           plotOutput(outputId = "plot_hourly", height = 550) |> withSpinner(4)
@@ -235,7 +235,7 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_fc",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
           plotOutput(outputId = "plot_fc", height = 550) |> withSpinner(4)
@@ -319,8 +319,8 @@ server <- function(input, output, session) {
         cols_daily <- 
           switch(input$plot_cols_daily,
                  "Temperature" = cols_daily_temp,
-                 "Precipitation" = cols_daily_precip,
-                 "Wind & Sun" = cols_daily_wind_sun)
+                 "Precip & Sun" = cols_daily_precip,
+                 "Wind" = cols_daily_wind)
         plot_daily(daily, cols = cols_daily, station = input$station_daily)
       })
     }
@@ -360,8 +360,8 @@ server <- function(input, output, session) {
         cols_hourly <- 
           switch(input$plot_cols_hourly,
                  "Temperature" = cols_hourly_temp,
-                 "Precipitation" = cols_hourly_precip,
-                 "Wind & Sun" = cols_hourly_wind_sun)
+                 "Precip & Sun" = cols_hourly_precip,
+                 "Wind" = cols_hourly_wind)
         plot_hourly(hourly, cols = cols_hourly, station = input$station_hourly)
       })
     }
@@ -399,8 +399,8 @@ server <- function(input, output, session) {
         cols_fc <- 
           switch(input$plot_cols_fc,
                  "Temperature" = cols_daily_temp,
-                 "Precipitation" = cols_daily_precip,
-                 "Wind & Sun" = cols_daily_wind_sun)
+                 "Precip & Sun" = cols_daily_precip,
+                 "Wind" = cols_daily_wind)
         plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
       })
   })
