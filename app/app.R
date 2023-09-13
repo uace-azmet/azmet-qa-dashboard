@@ -32,7 +32,18 @@ ui <- page_navbar(
     #Makes sidebar conditional on active nav tab
     conditionalPanel(
       "input.navbar === 'Daily'",
-      uiOutput("daily_range"),
+      myAirDatepickerInput(
+        inputId = "dailyrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 15, Sys.Date() - 1),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date() - 1,
+        update_on = "close",
+        addon = "none"
+      ),
       checkboxInput(
         "test_daily",
         span("Use test data",
@@ -45,7 +56,18 @@ ui <- page_navbar(
     ),
     conditionalPanel(
       "input.navbar === 'Hourly'",
-      uiOutput("hourly_range"),
+      myAirDatepickerInput(
+        inputId = "hourlyrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 7, Sys.Date()), #only 7 days because hourly
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date(),
+        update_on = "close",
+        addon = "none"
+      ),
       checkboxInput(
         "test_hourly",
         span("Use test data",
@@ -58,11 +80,33 @@ ui <- page_navbar(
     ),
     conditionalPanel(
       "input.navbar === 'Forecast-based'",
-      uiOutput("fc_range")
+      myAirDatepickerInput(
+        inputId = "fcrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 15, Sys.Date() - 1),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date() - 1,
+        update_on = "close",
+        addon = "none"
+      )
     ),
     conditionalPanel(
       "input.navbar === 'Battery'",
-      uiOutput("battery_range")
+      myAirDatepickerInput(
+        inputId = "batteryrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 7, Sys.Date()),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date(),
+        update_on = "close",
+        addon = "none"
+      )
     )
   ), 
   ## Daily ----
@@ -229,67 +273,6 @@ ui <- page_navbar(
 )
 
 server <- function(input, output, session) {
-  
-  # Date selector inputs -----
-  output$daily_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "dailyrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 15, Sys.Date() - 1),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date() - 1,
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$hourly_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "hourlyrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 7, Sys.Date()), #only 7 days because hourly
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date(),
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$fc_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "fcrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 15, Sys.Date() - 1),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date() - 1,
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$battery_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "batteryrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 7, Sys.Date()),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date(),
-      update_on = "close",
-      addon = "none"
-    )
-  })
   
   # Daily tab ----
   observe({
