@@ -1,5 +1,5 @@
-#only use measured variables
-
+# Vectors of column names to be used for selecting which variables to plot
+# Only includes measured variables, not calculated variables (except dwpt)
 cols_daily_temp <- 
   c("temp_air_maxC", "temp_air_meanC", "temp_air_minC", "temp_soil_10cm_maxC", 
     "temp_soil_10cm_meanC", "temp_soil_10cm_minC", "temp_soil_50cm_maxC", 

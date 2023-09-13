@@ -1,15 +1,22 @@
-library(tidyverse)
-library(pins)
-library(arrow)
-library(units)
-library(patchwork)
-
-board <- board_connect()
-fc_daily <- board |>
-  pin_read("ericrscott/fc_daily") |>
-  arrange(varname) |>
-  filter(datetime > "2023-06-01" & datetime < "2023-07-19") 
-
+#' Create plots for forecast-based validation
+#' 
+#' Creates line plot with 99% PI ribbon.  Observations are plotted as points and
+#' colored red if outside of PI ribbon.
+#'
+#' @param fc_daily the pinned dataset here:
+#'   https://viz.datascience.arizona.edu/content/2bd43bd6-ff6c-4362-8212-288820e5d412
+#' @param cols character vector of column names
+#' @param station character; station name
+#'
+#' @return a patchwork object
+#'
+#' @examples
+#' board <- board_connect()
+#' fc_daily <- board |>
+#'   pin_read("ericrscott/fc_daily") |>
+#'   arrange(varname) |>
+#'   filter(datetime > "2023-06-01" & datetime < "2023-07-19")
+#' plot_fc(fc_daily, cols = c("relative_humidity_max", "temp_air_meanC"))
 plot_fc <- function(fc_daily, cols, station = "Tucson") {
   
   fc_filtered <- 
