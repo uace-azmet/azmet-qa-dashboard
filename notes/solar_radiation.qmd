@@ -164,3 +164,88 @@ daily |> filter(sol_rad_total > sol_rad_max) |>
   select(starts_with("sol"))
 
 ```
+
+# `TrenchR`
+
+The `TrenchR` package provides some functions for solar radiation
+
+```{r}
+library(TrenchR)
+
+# some functions aren't vectorized
+# vectorize azimuth angle
+azimuth_angle2 <- function(doy, lat, lon, hour, offset = NA) {
+  purrr::pmap_dbl(list(doy, lat, lon, hour, offset), azimuth_angle)
+}
+
+# outputs stupid vector
+sol_rad_total <- function(doy, psi, tau, elev, rho) {
+  purrr::pmap(list(doy, psi, tau, elev, rho), solar_radiation) |> 
+    purrr::map_dbl(\(x) sum(x[c(1, 2)])) #just direct and diffuse?
+}
+
+hourly_sol <-
+  hourly |>
+  left_join(station_info) |>
+  select(meta_station_id, date_datetime, latitude, longitude) |>
+  mutate(doy = yday(date_datetime)) |>
+  mutate(hour = hour(date_datetime) + 0.5) |> #shift to middle of hour??
+  mutate(
+    dec_angle = dec_angle(doy),
+    zenith_angle = zenith_angle(
+      doy,
+      lat = latitude,
+      lon = longitude,
+      hour = hour,
+      offset = -7
+    ),
+    # solar_noon = solar_noon(lon = longitude, doy = doy, offset = -7),
+    # azimuth_angle = azimuth_angle2(
+    #   doy = doy, 
+    #   lat = latitude,
+    #   lon = longitude,
+    #   hour = hour,
+    #   offset = -7
+    # ),
+    # daylength = daylength(latitude, doy),
+    # air_pressure = airpressure_from_elev(elev),
+    # air_pressure = airpressure_from_elev(1000),
+    solar_rad = sol_rad_total(
+      doy,
+      psi = zenith_angle * 2 * pi / 360,
+      tau = 1, #atmospheric transmissivity, not sure how to estimate
+      # elev = elev,
+      elev = 1000,
+      rho = 1 #albedo, not sure how to estimate, but probably high??
+    ) |> set_units("W m-2")
+  ) 
+
+hourly_df <-
+  left_join(hourly,
+            hourly_sol |> select(meta_station_id, date_datetime, solar_rad)) |>
+  mutate(sol_rad_total = (sol_rad_total / set_units(1, "hr")) |> set_units("W m-2")) 
+
+hourly_df |>
+  filter(sol_rad_total > solar_rad) |>
+  select(date_datetime, sol_rad_total, solar_rad) |> 
+  mutate(hour = hour(date_datetime)) |>
+  count(hour)
+
+#only fucked up in mornings and evenings.  whyyyyy
+  
+
+ggplot(hourly_df, aes(x = date_datetime)) +
+  geom_line(aes(y = sol_rad_total)) +
+  geom_line(aes(y = solar_rad), color = "red") +
+  facet_wrap(~meta_station_id)
+
+
+
+```
+
+If I set albedo to 1 and transmissivity to 1, it does a pretty good job only flagging 11 rows.
+Questions for Jeremy:
+
+-   Can we get elveation data for sites (if not, can probably look it up based on lat/lon) (elev doesn't seem to matter much though)
+
+-   Is sensor getting direct, diffused, reflected solar radiation or just a subset of those?
