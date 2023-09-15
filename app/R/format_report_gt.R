@@ -1,4 +1,3 @@
-library(gt)
 #' Convert `data.validator` report into custom `gt` table
 #'
 #' @param report a tibble created by `data.validator::get_results()`
@@ -6,7 +5,7 @@ library(gt)
 #'
 #' @return a `gt` table
 format_report_gt <- function(report, data) {
-  #TODO make these arguments so they can be adjusted in the dashboard maybe?
+  #TODO make warn_at and error_at arguments so they can be adjusted in the dashboard maybe?
   #TODO would it be possible to add a header to the table that displays these thresholds?
   warn_at <- 1 #warn if ≥ 1 row fails a validation
   error_at <- 0.01 #error if ≥ 1% of rows fail validation
@@ -23,9 +22,9 @@ format_report_gt <- function(report, data) {
     )) |> 
     select(assertion.id, mark, validation = description, n_failed, p_failed, bad_rows) |> 
     mutate(bad_rows = ifelse(
-      is.na(bad_rows), #if no bad rows
-      "&mdash;", #print an emdash
-      make_csv_button(assertion.id, bad_rows) #else make tibble into a download button
+      is.na(bad_rows), #if no bad rows...
+      "&mdash;", #...print an emdash (—) instead of "NA"...
+      make_csv_button(assertion.id, bad_rows) #...else convert tibble into a download button
     )) |> 
     gt() |> 
     cols_hide(assertion.id) |> 
@@ -56,9 +55,19 @@ format_report_gt <- function(report, data) {
 }
 
 
-#helper to reformat list column of tibbles to be html for a button that downloads the tibble as a .csv
-#adapted from pointblank package: https://github.com/rich-iannone/pointblank/blob/645698bc3ac1080f97ee14081d6cfe61a2c1d70f/R/get_agent_report.R#L1365
 
+
+#' Reformat tibbles in a list-column into html code for a download button
+#'
+#'helper to reformat list column of tibbles to be html for a button that
+#'downloads the tibble as a .csv. Adapted from `pointblank` package:
+#'https://github.com/rich-iannone/pointblank/blob/645698bc3ac1080f97ee14081d6cfe61a2c1d70f/R/get_agent_report.R#L1365
+#'
+#' @param assertion.id randomly generated id number column from data.validator
+#' @param bad_df list column of tibbles containing data from failed validations
+#'
+#' @return a vector of HTML code for buttons
+#' 
 make_csv_button <- function(assertion.id, bad_df) {
   
   map2_chr(assertion.id, bad_df, \(assertion.id, bad_df) {

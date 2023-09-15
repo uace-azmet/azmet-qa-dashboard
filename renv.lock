@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.2.2",
+    "Version": "4.3.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -116,7 +116,7 @@
     },
     "arrow": {
       "Package": "arrow",
-      "Version": "12.0.1",
+      "Version": "12.0.1.1",
       "Source": "Repository",
       "Repository": "RSPM",
       "Requirements": [
@@ -134,7 +134,7 @@
         "utils",
         "vctrs"
       ],
-      "Hash": "6f47141e9d2f266b3cd87ac0cb013031"
+      "Hash": "9ff9955a1766e0bc3493f06d8f43c97e"
     },
     "askpass": {
       "Package": "askpass",
@@ -187,11 +187,12 @@
       "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteUsername": "uace-azmet",
+      "RemoteHost": "api.github.com",
       "RemoteRepo": "azmetr",
+      "RemoteUsername": "uace-azmet",
+      "RemotePkgRef": "uace-azmet/azmetr@main",
       "RemoteRef": "main",
       "RemoteSha": "b22d074852c6e98491445cdd543a46df6c0ded11",
-      "RemoteHost": "api.github.com",
       "Requirements": [
         "R",
         "attempt",
@@ -205,7 +206,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "0e0690c1c163fb1b16593cd73f5e5c09"
+      "Hash": "1e08e824bf0314028419b9cf85042244"
     },
     "backports": {
       "Package": "backports",
@@ -662,14 +663,14 @@
     },
     "fs": {
       "Package": "fs",
-      "Version": "1.6.2",
+      "Version": "1.6.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "methods"
       ],
-      "Hash": "94af08e0aa9675a16fadbb3aaaa90d2a"
+      "Hash": "47b5f30c720c23999b913a1a635cf0bb"
     },
     "gargle": {
       "Package": "gargle",
@@ -1212,13 +1213,13 @@
     },
     "openssl": {
       "Package": "openssl",
-      "Version": "2.0.6",
+      "Version": "2.1.0",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "RSPM",
       "Requirements": [
         "askpass"
       ],
-      "Hash": "0f7cd2962e3044bb940cca4f4b5cecbe"
+      "Hash": "273a6bb4a9844c296a459d2176673270"
     },
     "packrat": {
       "Package": "packrat",
@@ -1512,9 +1513,12 @@
     "renv": {
       "Package": "renv",
       "Version": "1.0.2",
-      "OS_type": null,
+      "Source": "Repository",
       "Repository": "CRAN",
-      "Source": "Repository"
+      "Requirements": [
+        "utils"
+      ],
+      "Hash": "4b22ac016fe54028b88d0c68badbd061"
     },
     "reprex": {
       "Package": "reprex",
@@ -1593,10 +1597,10 @@
     },
     "rstudioapi": {
       "Package": "rstudioapi",
-      "Version": "0.14",
+      "Version": "0.15.0",
       "Source": "Repository",
-      "Repository": "RSPM",
-      "Hash": "690bd2acc42a9166ce34845884459320"
+      "Repository": "CRAN",
+      "Hash": "5564500e25cffad9e22244ced1379887"
     },
     "rvest": {
       "Package": "rvest",
@@ -1620,7 +1624,7 @@
     },
     "sass": {
       "Package": "sass",
-      "Version": "0.4.6",
+      "Version": "0.4.7",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1630,7 +1634,7 @@
         "rappdirs",
         "rlang"
       ],
-      "Hash": "cc3ec7dd33982ef56570229b62d6388e"
+      "Hash": "6bd4d33b50ff927191ec9acbf52fd056"
     },
     "scales": {
       "Package": "scales",
@@ -1987,7 +1991,7 @@
       "Package": "units",
       "Version": "0.8-2",
       "Source": "Repository",
-      "Repository": "RSPM",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
         "Rcpp"

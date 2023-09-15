@@ -93,6 +93,7 @@ check_daily <- function(daily) {
   
   
   # Check that all stations are reporting all dates
+  # Easiest way to do that is to convert to a tsibble and use `has_gaps()`
   daily |>
     tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = datetime) |>
     tsibble::has_gaps(.full = end()) |>
@@ -101,7 +102,9 @@ check_daily <- function(daily) {
     add_results(report)
   
   get_results(report) |> 
-    # make `bad_rows` list-column with slices of original data where there are problems
+    # make `bad_rows` list-column with slices of original data where there are
+    # problems.  This creates the data frame that will be downloaded with the
+    # "CSV" button in the table
     mutate(bad_rows = map(error_df, \(.x){
       if(length(.x$index) > 0) {
         daily |> 
@@ -111,7 +114,9 @@ check_daily <- function(daily) {
       }
     })) |> 
     
-    #use missing dates tibble for "all stations reporting" validation
+    # use missing dates tibble for "all stations reporting" validation.  This
+    # creates the data frame that will be downloaded with the "CSV" button in the
+    # table
     mutate(bad_rows = ifelse(
       table_name == "missing_dates" & type == "error",
       list(

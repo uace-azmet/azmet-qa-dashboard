@@ -1,7 +1,15 @@
+#' Run battery voltage validations for daily data
+#'
+#' Runs validations using the `data.validator` package and outputs a tibble of
+#' results
+#'
+#' @param daily a tibble returned by `az_daily()`
+#'
+#' @return a tibble with list columns
 check_battery_daily <- function(daily) {
-  #Calculate 10 timestep rolling mean of mean voltage (less than 10 days is
-  #allowed at start of timeseries) and anomaly (absolute difference) from that
-  #rolling mean.
+  # Calculate 10-timestep rolling mean of mean voltage (less than 10 days is
+  # allowed at start of timeseries) and anomaly (absolute difference) from that
+  # rolling mean.
   daily <- 
     daily |> 
     arrange(desc(datetime)) |> 
@@ -36,6 +44,15 @@ check_battery_daily <- function(daily) {
 }
 
 
+#' Run battery voltage validations for hourly data
+#'
+#' Runs validations using the `data.validator` package and outputs a tibble of
+#' results
+#'
+#' @param hourly a tibble returned by `az_hourly()`
+#'
+#' @return a tibble with list columns
+#' 
 check_battery_hourly <- function(hourly) {
   hourly <- 
     hourly |> 

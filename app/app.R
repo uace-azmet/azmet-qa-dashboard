@@ -1,17 +1,23 @@
 library(shiny)
+library(bslib)
+library(bsicons)
+library(shinycssloaders)
+library(shinyWidgets)
+library(htmltools)
+
 library(data.validator)
 library(tidyverse)
 library(azmetr)
 library(gt)
 library(pins)
 library(arrow)
-library(bslib)
-library(bsicons)
-library(shinycssloaders)
-library(shinyWidgets)
 library(plotly)
 library(slider)
+library(units)
+library(patchwork)
 
+# Everything in R should be sourced automatically, but I found I needed to add
+# these to get it to work.  Not sure why.
 source("R/helpers.R")
 source("R/check_daily.R")
 source("R/format_report_gt.R")
@@ -29,10 +35,23 @@ ui <- page_navbar(
   ## Sidebar ----
   sidebar = sidebar(
     bg = "darkgrey",
-    #Makes sidebar conditional on active nav tab
+    # Makes sidebar conditional on active nav tab.  Separate sidebars are needed
+    # for each tab.
     conditionalPanel(
       "input.navbar === 'Daily'",
-      uiOutput("daily_range"),
+      myAirDatepickerInput(
+        inputId = "dailyrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 15, Sys.Date() - 1),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date() - 1,
+        update_on = "close",
+        addon = "none"
+      ),
+      # really just for testing purposes.  Can be removed if desired
       checkboxInput(
         "test_daily",
         span("Use test data",
@@ -45,7 +64,18 @@ ui <- page_navbar(
     ),
     conditionalPanel(
       "input.navbar === 'Hourly'",
-      uiOutput("hourly_range"),
+      myAirDatepickerInput(
+        inputId = "hourlyrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 7, Sys.Date()), #only 7 days because hourly
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date(),
+        update_on = "close",
+        addon = "none"
+      ),
       checkboxInput(
         "test_hourly",
         span("Use test data",
@@ -58,11 +88,33 @@ ui <- page_navbar(
     ),
     conditionalPanel(
       "input.navbar === 'Forecast-based'",
-      uiOutput("fc_range")
+      myAirDatepickerInput(
+        inputId = "fcrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 15, Sys.Date() - 1),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date() - 1,
+        update_on = "close",
+        addon = "none"
+      )
     ),
     conditionalPanel(
       "input.navbar === 'Battery'",
-      uiOutput("battery_range")
+      myAirDatepickerInput(
+        inputId = "batteryrange",
+        label = "Date Range",
+        value = c(Sys.Date() - 7, Sys.Date()),
+        range = TRUE,
+        separator = " – ",
+        dateFormat = "MM/dd/yy",
+        minDate = "2020-12-30",
+        maxDate = Sys.Date(),
+        update_on = "close",
+        addon = "none"
+      )
     )
   ), 
   ## Daily ----
@@ -72,9 +124,9 @@ ui <- page_navbar(
       height = "100%",
       width = NULL,
       fill = FALSE,
-      # plot area 1.5 times that of table area
+      # Make the plot area 1.5 times that of table area
       style = css(grid_template_columns = "1fr 1.5fr"),
-      #card for validation table
+      # card for validation table
       card(
         # max_height = 250,
         full_screen = TRUE,
@@ -84,7 +136,7 @@ ui <- page_navbar(
         gt_output(outputId = "check_daily") |> withSpinner(4)
       ),
       
-      #card for plots with its own sidebar inputs
+      # card for plots with its own sidebar inputs for station and variables
       card(
         full_screen = TRUE,
         layout_sidebar(
@@ -100,9 +152,12 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_daily",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
+          # Unfortunately it is not easy to get plots to just fill their
+          # containers dynamically.  I chose this height based on what looks
+          # good on my laptop, but this could be adjusted.
           plotOutput(outputId = "plot_daily", height = 550) |> withSpinner(4)
         )
       )
@@ -139,7 +194,7 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_hourly",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
           plotOutput(outputId = "plot_hourly", height = 550) |> withSpinner(4)
@@ -160,8 +215,8 @@ ui <- page_navbar(
         full_screen = TRUE,
         card_header(
           "Forecast-Based Validation",
-          fc_popup,
-          class = "d-flex justify-content-between"
+          fc_popup, #defined at top of this file
+          class = "d-flex justify-content-between" # related to getting the info button in the right corner
         ),
         gt_output(outputId = "check_forecast") |> withSpinner(4)
       ),
@@ -180,7 +235,7 @@ ui <- page_navbar(
             shiny::selectInput(
               "plot_cols_fc",
               "Variables",
-              choices = c("Temperature", "Precipitation", "Wind & Sun")
+              choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
           plotOutput(outputId = "plot_fc", height = 550) |> withSpinner(4)
@@ -230,68 +285,8 @@ ui <- page_navbar(
 
 server <- function(input, output, session) {
   
-  # Date selector inputs -----
-  output$daily_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "dailyrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 15, Sys.Date() - 1),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date() - 1,
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$hourly_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "hourlyrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 7, Sys.Date()), #only 7 days because hourly
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date(),
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$fc_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "fcrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 15, Sys.Date() - 1),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date() - 1,
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
-  output$battery_range <- renderUI({
-    myAirDatepickerInput(
-      inputId = "batteryrange",
-      label = "Date Range",
-      value = c(Sys.Date() - 7, Sys.Date()),
-      range = TRUE,
-      separator = " – ",
-      dateFormat = "MM/dd/yy",
-      minDate = "2020-12-30",
-      maxDate = Sys.Date(),
-      update_on = "close",
-      addon = "none"
-    )
-  })
-  
   # Daily tab ----
+  # observe({ if (input$navbar == "Daily")... is used to only run the code in this navbar tab when the navbar tab is active
   observe({
     if (input$navbar == "Daily") {
       req(input$dailyrange) #wait until input exists
@@ -300,12 +295,12 @@ server <- function(input, output, session) {
       end <- input$dailyrange[2]
       
       #temporary just for testing
-      if(input$test_daily) { #
-        daily <- read_csv("testdata_daily.csv") #
-      } else { #
+      if(input$test_daily) { 
+        daily <- read_csv("testdata_daily.csv") 
+      } else { 
         #query API
         daily <- az_daily(start_date = start, end_date = end)
-      } #
+      } 
       output$check_daily <- gt::render_gt({
         #reload when input changes
         input$dailyrange
@@ -324,8 +319,8 @@ server <- function(input, output, session) {
         cols_daily <- 
           switch(input$plot_cols_daily,
                  "Temperature" = cols_daily_temp,
-                 "Precipitation" = cols_daily_precip,
-                 "Wind & Sun" = cols_daily_wind_sun)
+                 "Precip & Sun" = cols_daily_precip,
+                 "Wind" = cols_daily_wind)
         plot_daily(daily, cols = cols_daily, station = input$station_daily)
       })
     }
@@ -336,16 +331,17 @@ server <- function(input, output, session) {
     if (input$navbar == "Hourly") {
       req(input$hourlyrange) #wait until input exists
       
-      start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
+      #to convert to datetime
+      start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() 
       end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
       
       #temporary for testing
-      if(input$test_hourly) { #
-        hourly <- read_csv("testdata_hourly.csv") #
-      } else { #
+      if(input$test_hourly) {
+        hourly <- read_csv("testdata_hourly.csv")
+      } else {
         #query API
         hourly <- az_hourly(start_date_time = start, end_date_time = end)
-      } #
+      }
       
       output$check_hourly <- gt::render_gt({
         # force reload as soon as input changes
@@ -364,16 +360,14 @@ server <- function(input, output, session) {
         cols_hourly <- 
           switch(input$plot_cols_hourly,
                  "Temperature" = cols_hourly_temp,
-                 "Precipitation" = cols_hourly_precip,
-                 "Wind & Sun" = cols_hourly_wind_sun)
+                 "Precip & Sun" = cols_hourly_precip,
+                 "Wind" = cols_hourly_wind)
         plot_hourly(hourly, cols = cols_hourly, station = input$station_hourly)
       })
     }
   })
   
   # Forecast-based tab ----
-  
-  # Only run forecast-based validations when "Forecast-based" tab is active
   observe({
     if (input$navbar == "Forecast-based") {
       board <- board_connect()
@@ -390,6 +384,7 @@ server <- function(input, output, session) {
           #reload when input changes
           input$fcrange
           
+          #run validation
           report_fc <- check_forecast(fc_daily)
           
           #convert to gt table
@@ -404,8 +399,8 @@ server <- function(input, output, session) {
         cols_fc <- 
           switch(input$plot_cols_fc,
                  "Temperature" = cols_daily_temp,
-                 "Precipitation" = cols_daily_precip,
-                 "Wind & Sun" = cols_daily_wind_sun)
+                 "Precip & Sun" = cols_daily_precip,
+                 "Wind" = cols_daily_wind)
         plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
       })
   })
@@ -417,7 +412,8 @@ server <- function(input, output, session) {
     if(input$navbar == "Battery") {
       req(input$batteryrange)
       
-      start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() #to convert to datetime
+      #to convert to datetime
+      start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() 
       end   <- input$batteryrange[2] |> as.POSIXct() |> format_ISO8601()
       
       daily <- az_daily(start_date = start, end_date = end)
@@ -445,6 +441,7 @@ server <- function(input, output, session) {
         format_report_gt(report_battery_hourly, hourly)
       })
       
+      #TODO move plotting code to function?
       output$plot_battery_hourly <- renderPlotly({
         h_time <-
           ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
