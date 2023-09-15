@@ -16,7 +16,7 @@ library(slider)
 library(units)
 library(patchwork)
 
-# Everything in R should be sourced automatically, but I found I needed to add
+# Everything in R/ should be sourced automatically, but I found I needed to add
 # these to get it to work.  Not sure why.
 source("R/helpers.R")
 source("R/check_daily.R")
@@ -95,7 +95,7 @@ ui <- page_navbar(
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
-        minDate = "2020-12-30",
+        minDate = "2023-02-05",
         maxDate = Sys.Date() - 1,
         update_on = "close",
         addon = "none"
