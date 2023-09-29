@@ -23,6 +23,8 @@ Looking for MJ/m^2^ or possibly W/m^2^ which includes time in the denominator
 (daily$sol_rad_total[1] / set_units(1, "d") )|> set_units("W/m^2")
 ```
 
+# `fishmethods::astrocalc4r()`
+
 ## Parameter estimates
 
 We can get a bunch of data about solar radiation with `fishmethods::astrocalc4r()` .
@@ -178,10 +180,14 @@ azimuth_angle2 <- function(doy, lat, lon, hour, offset = NA) {
   purrr::pmap_dbl(list(doy, lat, lon, hour, offset), azimuth_angle)
 }
 
-# outputs stupid vector
+# solar_radiation() on a single point outputs a length 3 vector!
+# [1] = direct, [2] = diffuse, [3] = reflected
+# It is vectorized, but the output lengh will be input * 3!
+# I like this approach better:
 sol_rad_total <- function(doy, psi, tau, elev, rho) {
   purrr::pmap(list(doy, psi, tau, elev, rho), solar_radiation) |> 
-    purrr::map_dbl(\(x) sum(x[c(1, 2)])) #just direct and diffuse?
+    # [1] = direct, [2] = diffuse, [3] = reflected
+    purrr::map_dbl(\(x) sum(x[c(1, 3)])) 
 }
 
 hourly_sol <-
@@ -189,6 +195,8 @@ hourly_sol <-
   left_join(station_info) |>
   select(meta_station_id, date_datetime, latitude, longitude) |>
   mutate(doy = yday(date_datetime)) |>
+  # mutate(hour = hour(date_datetime)) |> 
+  #TODO expand grid to include 00:00, 00:15, 00:30, 00:45, and 00:59:59
   mutate(hour = hour(date_datetime) + 0.5) |> #shift to middle of hour??
   mutate(
     dec_angle = dec_angle(doy),
@@ -199,46 +207,59 @@ hourly_sol <-
       hour = hour,
       offset = -7
     ),
-    # solar_noon = solar_noon(lon = longitude, doy = doy, offset = -7),
-    # azimuth_angle = azimuth_angle2(
-    #   doy = doy, 
-    #   lat = latitude,
-    #   lon = longitude,
-    #   hour = hour,
-    #   offset = -7
-    # ),
+    solar_noon = solar_noon(lon = longitude, doy = doy, offset = -7),
+    azimuth_angle = azimuth_angle2(
+      doy = doy,
+      lat = latitude,
+      lon = longitude,
+      hour = hour,
+      offset = -7
+    ),
     # daylength = daylength(latitude, doy),
     # air_pressure = airpressure_from_elev(elev),
     # air_pressure = airpressure_from_elev(1000),
     solar_rad = sol_rad_total(
       doy,
       psi = zenith_angle * 2 * pi / 360,
-      tau = 1, #atmospheric transmissivity, not sure how to estimate
+      tau = 0.6, #atmospheric transmissivity, not sure how to estimate
       # elev = elev,
       elev = 1000,
       rho = 1 #albedo, not sure how to estimate, but probably high??
-    ) |> set_units("W m-2")
-  ) 
+    ) |> set_units("W m-2"),
+    solar_rad_direct = direct_solar_radiation(
+      lat = latitude,
+      doy = doy,
+      elev = 1000,
+      t = hour,
+      t0 = solar_noon,
+      # method = "Campbell 1977" 
+      method = "Gates 1962" #This method returns some NaNs that probably should be coerced to zeros?
+    ) 
+  ) |> 
+  mutate(solar_rad_direct = ifelse(is.nan(solar_rad_direct), 0, solar_rad_direct)) |> 
+  mutate(solar_rad_direct = set_units(solar_rad_direct, "W m-2"))
 
 hourly_df <-
-  left_join(hourly,
-            hourly_sol |> select(meta_station_id, date_datetime, solar_rad)) |>
+  left_join(
+    hourly,
+    hourly_sol |> select(meta_station_id, date_datetime, solar_rad_direct, hour)
+  ) |>
   mutate(sol_rad_total = (sol_rad_total / set_units(1, "hr")) |> set_units("W m-2")) 
 
 hourly_df |>
-  filter(sol_rad_total > solar_rad) |>
-  select(date_datetime, sol_rad_total, solar_rad) |> 
-  mutate(hour = hour(date_datetime)) |>
+  filter(sol_rad_total > solar_rad_direct) |>
+  select(meta_station_id, date_datetime, sol_rad_total, solar_rad_direct, hour) |> 
+  # group_by(meta_station_id) |> 
   count(hour)
 
-#only fucked up in mornings and evenings.  whyyyyy
+#only messed up in mornings and evenings.  whyyyyy
   
-
-ggplot(hourly_df, aes(x = date_datetime)) +
+hourly_df |> 
+  filter(meta_station_id %in% c("az01", "az05", "az32")) |> 
+ggplot(aes(x = date_datetime)) +
   geom_line(aes(y = sol_rad_total)) +
-  geom_line(aes(y = solar_rad), color = "red") +
+  geom_line(aes(y = solar_rad_direct), color = "red") +
   facet_wrap(~meta_station_id)
-
 
 
 ```
@@ -249,3 +270,12 @@ Questions for Jeremy:
 -   Can we get elveation data for sites (if not, can probably look it up based on lat/lon) (elev doesn't seem to matter much though)
 
 -   Is sensor getting direct, diffused, reflected solar radiation or just a subset of those?
+
+-   What exactly is being reported in the hourly data?
+    An instantaneous measurement at the end of the hour, beginning of hour, middle of hour?
+    An average over the past hour?
+    Does this help explain the apparent "phase shift".
+    According to metadata it's an hourly total, but how do I convert the instantaneous (?) estimates in W/m^2^ to the hourly total in MJ/m^2^ ?
+    Is multiplying by 1 hr correct?
+
+-   

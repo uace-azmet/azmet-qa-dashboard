@@ -1,0 +1,145 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+```{r}
+library(azmetr)
+library(tidyverse)
+library(TrenchR)
+library(hms)
+library(units)
+
+# solar_radiation() on a single point outputs a length 3 vector!
+# [1] = direct, [2] = diffuse, [3] = reflected
+# It is vectorized, but the output lengh will be input * 3!
+# I like this approach better:
+sol_rad_total <- function(doy, psi, tau, elev, rho) {
+  purrr::pmap(list(doy, psi, tau, elev, rho), solar_radiation) |> 
+    # [1] = direct, [2] = diffuse, [3] = reflected
+    purrr::map_dbl(\(x) sum(x[c(1, 2, 3)])) 
+}
+```
+
+```{r}
+daily <- az_daily(start_date = "2022-01-01", end_date = "2023-01-01")
+hourly <- az_hourly(start_date_time = "2022-04-15 00", end = "2022-04-17 00")
+
+```
+
+Unfortunately, hourly data is coded strangely with no hour 0 and instead a data point 1 second before midnight.
+It would be easiest to round up I think (for now at least)
+
+```{r}
+hourly <- hourly |> 
+  mutate(date_datetime = ceiling_date(date_datetime, unit = "hour"))
+```
+
+
+Create a finer grid to get more than one estimate per hour for instantaneous solar radiation
+
+```{r}
+#fractions of an hour to bin hour into
+dx_min <- 5
+dx <- dx_min/60
+mins <- seq(0, 60, by = dx_min)
+
+#TODO, this doesn't seem right since 0 min is the same as 60 min for the next hour
+
+
+hourly_grid <- 
+  hourly |>
+  select(meta_station_id, date_datetime) |>
+  #TODO i'm doing the geometry wrong here I'm pretty sure.
+  expand_grid(minute = mins) |>
+  mutate(grid_dates =
+           make_datetime(
+             year = year(date_datetime),
+             day = day(date_datetime),
+             hour = hour(date_datetime),
+             min = minute
+           )) |> 
+  select(-minute) |> 
+  #need doy and decimal hours
+  mutate(doy = yday(grid_dates),
+         hour = as_hms(grid_dates) |> as.duration() |> as.numeric("hours"))
+```
+
+
+Calculate instantaneous solar radiation (using one possible method)
+
+```{r}
+sol_rad_grid <- 
+  hourly_grid |> 
+  left_join(station_info) |> 
+  mutate(
+    # solar_noon = solar_noon(lon = longitude, doy = doy, offset = -7),
+    # solar_rad = direct_solar_radiation(
+    #   lat = latitude,
+    #   doy = doy,
+    #   elev = elev_m,
+    #   t = hour,
+    #   t0 = solar_noon,
+    #   method = "Campbell 1977"
+    # )
+    zenith_angle = zenith_angle(
+      doy,
+      lat = latitude,
+      lon = longitude,
+      hour = hour,
+      offset = -7
+    ),
+    solar_rad = sol_rad_total(
+      doy,
+      psi = zenith_angle * 2 * pi / 360,
+      elev = elev_m,
+      #TODO: tweaking these might be the key:
+      tau = 0.8, #atmospheric transmissivity, not sure how to estimate
+      rho = 0.7 #albedo, not sure how to estimate, but probably high??
+    )
+  ) |> 
+  #set units to W/m^2
+  mutate(solar_rad = set_units(solar_rad, "W m-2"))
+```
+
+
+Let's see how the finer grid compares to the true data
+
+```{r}
+left_join(hourly |> az_add_units(), sol_rad_grid) |> 
+  filter(meta_station_id == "az20") |> 
+ggplot(aes(x = grid_dates)) +
+  geom_line(aes(y = sol_rad_total)) +
+  geom_line(aes(y = solar_rad * set_units(1, "hr")), color = "red") +
+  scale_x_datetime(date_labels = "%H:%M", date_breaks = "30 mins") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Still don't quite understand how these match up
+
+Try integrating area under the curve
+
+```{r}
+sol_rad_max <- sol_rad_grid |> 
+  group_by(meta_station_id, date_datetime) |> 
+  summarise(
+    sol_rad_max = sum(solar_rad) * set_units(dx, "hr"),
+    .groups = "drop"
+  ) |> 
+  #convert to MJ/m^2
+  mutate(sol_rad_max = set_units(sol_rad_max, "MJ m-2")) |> 
+  #sum is for previous hour, right?
+  mutate(sol_rad_max = lag(sol_rad_max))
+```
+
+Let's see if using more timepoints improved accuracy
+
+```{r}
+left_join(hourly, sol_rad_max) |> 
+  mutate(sol_rad_total = set_units(sol_rad_total, "MJ m-2")) |> 
+  filter(meta_station_id == "az20") |> 
+  ggplot(aes(x = date_datetime)) +
+  geom_line(aes(y = sol_rad_total)) +
+  geom_line(aes(y = sol_rad_max), color = "red") +
+  facet_wrap(~meta_station_id)
+```
