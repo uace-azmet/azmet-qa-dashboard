@@ -118,8 +118,10 @@ ui <- page_navbar(
     )
   ), 
   ## Daily ----
+  
   nav_panel(
     title = "Daily",
+    # shinybusy::add_busy_spinner("semipolar", color = "#EF4056", position = "bottom-left", margins = c(50, 50)),
     layout_column_wrap(
       height = "100%",
       width = NULL,
@@ -133,10 +135,11 @@ ui <- page_navbar(
         card_header(
           "Daily Data Validation"
         ),
-        gt_output(outputId = "check_daily") |> withSpinner(4)
+        gt_output(outputId = "check_daily")
       ),
       
       # card for plots with its own sidebar inputs for station and variables
+      
       card(
         full_screen = TRUE,
         layout_sidebar(
@@ -158,7 +161,7 @@ ui <- page_navbar(
           # Unfortunately it is not easy to get plots to just fill their
           # containers dynamically.  I chose this height based on what looks
           # good on my laptop, but this could be adjusted.
-          plotOutput(outputId = "plot_daily", height = 550) |> withSpinner(4)
+          plotOutput(outputId = "plot_daily", height = 550) 
         )
       )
     )
@@ -177,7 +180,7 @@ ui <- page_navbar(
         card_header(
           "Hourly Data Validation"
         ),
-        gt_output(outputId = "check_hourly") |> withSpinner(4)
+        gt_output(outputId = "check_hourly") 
       ),
       card(
         full_screen = TRUE,
@@ -197,7 +200,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_hourly", height = 550) |> withSpinner(4)
+          plotOutput(outputId = "plot_hourly", height = 550) 
         )
       )
     )
@@ -218,7 +221,7 @@ ui <- page_navbar(
           fc_popup, #defined at top of this file
           class = "d-flex justify-content-between" # related to getting the info button in the right corner
         ),
-        gt_output(outputId = "check_forecast") |> withSpinner(4)
+        gt_output(outputId = "check_forecast") 
       ),
       card(
         full_screen = TRUE,
@@ -238,7 +241,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_fc", height = 550) |> withSpinner(4)
+          plotOutput(outputId = "plot_fc", height = 550) 
         )
       )
     )
@@ -256,28 +259,28 @@ ui <- page_navbar(
         card_header(
           "Daily Data"
         ),
-        gt_output(outputId = "check_battery_daily") |> withSpinner(4)
+        gt_output(outputId = "check_battery_daily") 
       ),
       card(
         full_screen = TRUE,
         card_header(
           "Daily Data"
         ),
-        plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
+        plotlyOutput(outputId = "plot_battery_daily", height = "300px") 
       ),
       card(
         full_screen = TRUE,
         card_header(
           "Hourly Data"
         ),
-        gt_output(outputId = "check_battery_hourly") |> withSpinner(4)
+        gt_output(outputId = "check_battery_hourly") 
       ),
       card(
         full_screen = TRUE,
         card_header(
           "Hourly Data"
         ),
-        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
+        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") 
       )
     )
   )
@@ -290,6 +293,9 @@ server <- function(input, output, session) {
   observe({
     if (input$navbar == "Daily") {
       req(input$dailyrange) #wait until input exists
+      
+      shinybusy::show_modal_spinner(
+        "semipolar", color = "#AB0520", text = "Fetching data ...")
       
       start <- input$dailyrange[1]
       end <- input$dailyrange[2]
@@ -323,6 +329,8 @@ server <- function(input, output, session) {
                  "Wind" = cols_daily_wind)
         plot_daily(daily, cols = cols_daily, station = input$station_daily)
       })
+      
+      shinybusy::remove_modal_spinner()
     }
   })
   
@@ -330,6 +338,9 @@ server <- function(input, output, session) {
   observe({
     if (input$navbar == "Hourly") {
       req(input$hourlyrange) #wait until input exists
+      
+      shinybusy::show_modal_spinner(
+        "semipolar", color = "#AB0520", text = "Fetching data ...")
       
       #to convert to datetime
       start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() 
@@ -364,12 +375,17 @@ server <- function(input, output, session) {
                  "Wind" = cols_hourly_wind)
         plot_hourly(hourly, cols = cols_hourly, station = input$station_hourly)
       })
+      shinybusy::remove_modal_spinner()
     }
   })
   
   # Forecast-based tab ----
   observe({
     if (input$navbar == "Forecast-based") {
+      
+      shinybusy::show_modal_spinner(
+        "semipolar", color = "#AB0520", text = "Fetching data ...")
+      
       board <- board_connect()
       fc_daily <- board |> pin_read("ericrscott/fc_daily")
       req(input$fcrange, fc_daily)
@@ -403,6 +419,7 @@ server <- function(input, output, session) {
                  "Wind" = cols_daily_wind)
         plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
       })
+    shinybusy::remove_modal_spinner()
   })
   
   
@@ -411,6 +428,9 @@ server <- function(input, output, session) {
   observe({
     if(input$navbar == "Battery") {
       req(input$batteryrange)
+      
+      shinybusy::show_modal_spinner(
+        "semipolar", color = "#AB0520", text = "Fetching data ...")
       
       #to convert to datetime
       start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() 
@@ -476,6 +496,7 @@ server <- function(input, output, session) {
         
         ggplotly(h_daily)
       })
+      shinybusy::remove_modal_spinner()
     }
   })  
   
