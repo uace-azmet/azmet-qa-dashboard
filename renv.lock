@@ -187,12 +187,11 @@
       "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "azmetr",
       "RemoteUsername": "uace-azmet",
-      "RemotePkgRef": "uace-azmet/azmetr@main",
+      "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "b22d074852c6e98491445cdd543a46df6c0ded11",
+      "RemoteSha": "79f807b2e87c3475a07dbf2db0864c2fc4183dfd",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "R",
         "attempt",
@@ -206,7 +205,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "1e08e824bf0314028419b9cf85042244"
+      "Hash": "85ddf2ba6308aeeb74f371b2a32f4a27"
     },
     "backports": {
       "Package": "backports",
