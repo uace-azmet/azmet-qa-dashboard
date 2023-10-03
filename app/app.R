@@ -292,10 +292,10 @@ server <- function(input, output, session) {
   # observe({ if (input$navbar == "Daily")... is used to only run the code in this navbar tab when the navbar tab is active
   observe({
     if (input$navbar == "Daily") {
-      req(input$dailyrange) #wait until input exists
-      
       shinybusy::show_modal_spinner(
         "semipolar", color = "#AB0520", text = "Fetching data ...")
+      
+      req(input$dailyrange) #wait until input exists
       
       start <- input$dailyrange[1]
       end <- input$dailyrange[2]
@@ -337,10 +337,10 @@ server <- function(input, output, session) {
   # Hourly tab ----
   observe({
     if (input$navbar == "Hourly") {
-      req(input$hourlyrange) #wait until input exists
-      
       shinybusy::show_modal_spinner(
         "semipolar", color = "#AB0520", text = "Fetching data ...")
+      
+      req(input$hourlyrange) #wait until input exists
       
       #to convert to datetime
       start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() 
@@ -427,10 +427,10 @@ server <- function(input, output, session) {
   
   observe({
     if(input$navbar == "Battery") {
-      req(input$batteryrange)
-      
       shinybusy::show_modal_spinner(
         "semipolar", color = "#AB0520", text = "Fetching data ...")
+      
+      req(input$batteryrange)
       
       #to convert to datetime
       start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() 
