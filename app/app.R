@@ -263,24 +263,27 @@ ui <- page_navbar(
           title = "Timeseries",
           nav_panel(
             "Daily",
-            plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_daily") |> withSpinner(4)
           ),
           nav_panel(
             "Hourly",
-            plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_hourly") |> withSpinner(4)
           )
         ),
         navset_card_tab(
           full_screen = TRUE,
           title = "Voltage",
           nav_panel(
-            "Min Temp"
+            "Min Temp",
+            plotlyOutput(outputId = "plot_battery_min_temp") |> withSpinner(4)
           ),
           nav_panel(
-            "Max Temp"
+            "Max Temp",
+            plotlyOutput(outputId = "plot_battery_max_temp") |> withSpinner(4)
           ),
           nav_panel(
-            "Solar Radiation"
+            "Solar Radiation",
+            plotlyOutput(outputId = "plot_battery_sol_rad") |> withSpinner(4)
           )
         )
       )
@@ -481,6 +484,16 @@ server <- function(input, output, session) {
         
         ggplotly(h_daily)
       })
+      #TODO could probably streamline this by passing tab name to function as variable and conditionally rendering or something
+    output$plot_battery_min_temp <- renderPlotly({
+      plot_voltage(daily, "temp_air_minC")
+    })
+    output$plot_battery_max_temp <- renderPlotly({
+      plot_voltage(daily, "temp_air_maxC")
+    })
+    output$plot_battery_sol_rad <- renderPlotly({
+      plot_voltage(daily, "sol_rad_total")
+    })
     }
   })  
   
