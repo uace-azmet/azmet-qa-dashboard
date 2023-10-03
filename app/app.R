@@ -245,39 +245,44 @@ ui <- page_navbar(
   ),
   ## Battery ----
   nav_panel(
-    title = "Battery",
+    "Battery",
     layout_column_wrap(
-      width = NULL,
+      width = 1/2,
       height = "100%",
-      fill = FALSE,
-      style = css(grid_template_columns = "1fr 1.5fr"),
       card(
         full_screen = TRUE,
-        card_header(
-          "Daily Data"
-        ),
-        gt_output(outputId = "check_battery_daily") |> withSpinner(4)
-      ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Daily Data"
-        ),
-        plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
-      ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Hourly Data"
-        ),
+        card_header("Validation"),
+        gt_output(outputId = "check_battery_daily") |> withSpinner(4),
         gt_output(outputId = "check_battery_hourly") |> withSpinner(4)
+        
       ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Hourly Data"
+      layout_column_wrap(
+        width = 1,
+        navset_card_tab(
+          full_screen = TRUE,
+          title = "Timeseries",
+          nav_panel(
+            "Daily",
+            plotlyOutput(outputId = "plot_battery_daily", height = "300px") |> withSpinner(4)
+          ),
+          nav_panel(
+            "Hourly",
+            plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
+          )
         ),
-        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") |> withSpinner(4)
+        navset_card_tab(
+          full_screen = TRUE,
+          title = "Voltage",
+          nav_panel(
+            "Min Temp"
+          ),
+          nav_panel(
+            "Max Temp"
+          ),
+          nav_panel(
+            "Solar Radiation"
+          )
+        )
       )
     )
   )
