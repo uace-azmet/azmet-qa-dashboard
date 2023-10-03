@@ -24,12 +24,12 @@ sol_rad_total <- function(doy, psi, tau, elev, rho) {
 
 ```{r}
 daily <- az_daily(start_date = "2022-01-01", end_date = "2023-01-01")
-hourly <- az_hourly(start_date_time = "2022-04-15 00", end = "2022-04-17 00")
+hourly <- az_hourly(start_date_time = "2022-04-15 00", end = "2022-04-18 00")
 
 ```
 
 Unfortunately, hourly data is coded strangely with no hour 0 and instead a data point 1 second before midnight.
-It would be easiest to round up I think (for now at least)
+It would be easiest to round up I think (for now at least), but shouldn't be important since it's dark at midnight.
 
 ```{r}
 hourly <- hourly |> 
@@ -37,28 +37,31 @@ hourly <- hourly |>
 ```
 
 
-Create a finer grid to get more than one estimate per hour for instantaneous solar radiation
+Create a finer grid to get more than one estimate per hour for instantaneous solar radiation.  Used to estimate area under the curve with midpoint rule.
 
 ```{r}
-#fractions of an hour to bin hour into
-dx_min <- 5
-dx <- dx_min/60
-mins <- seq(0, 60, by = dx_min)
+dx_min <- 2 #length of bins in minutes
+dx <- dx_min/60 #length of bins in fraction of hour
+int <- seq(0, 60, by = dx_min)
 
-#TODO, this doesn't seem right since 0 min is the same as 60 min for the next hour
+midpoints <- map2_dbl(int, lag(int), \(x, y) mean(c(x,y))) |> na.omit()
 
+# convert decimal minutes into minutes and seconds
+minutes <- midpoints %/% 1
+seconds <- midpoints %% 1 * 60
 
+# create expanded grid of times for each hour
 hourly_grid <- 
   hourly |>
   select(meta_station_id, date_datetime) |>
-  #TODO i'm doing the geometry wrong here I'm pretty sure.
-  expand_grid(minute = mins) |>
+  expand_grid(minute = midpoints) |>
   mutate(grid_dates =
            make_datetime(
              year = year(date_datetime),
              day = day(date_datetime),
              hour = hour(date_datetime),
-             min = minute
+             min = minutes,
+             sec = seconds
            )) |> 
   select(-minute) |> 
   #need doy and decimal hours
@@ -67,7 +70,7 @@ hourly_grid <-
 ```
 
 
-Calculate instantaneous solar radiation (using one possible method)
+Calculate instantaneous solar radiation at each point (using one possible method)
 
 ```{r}
 sol_rad_grid <- 
@@ -92,11 +95,11 @@ sol_rad_grid <-
     ),
     solar_rad = sol_rad_total(
       doy,
-      psi = zenith_angle * 2 * pi / 360,
+      psi = zenith_angle * pi / 180,
       elev = elev_m,
       #TODO: tweaking these might be the key:
-      tau = 0.8, #atmospheric transmissivity, not sure how to estimate
-      rho = 0.7 #albedo, not sure how to estimate, but probably high??
+      tau = 1, #atmospheric transmissivity
+      rho = 1  #albedo
     )
   ) |> 
   #set units to W/m^2
