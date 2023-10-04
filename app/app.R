@@ -252,8 +252,10 @@ ui <- page_navbar(
       card(
         full_screen = TRUE,
         card_header("Validation"),
-        gt_output(outputId = "check_battery_daily") |> withSpinner(4),
-        gt_output(outputId = "check_battery_hourly") |> withSpinner(4)
+        #TODO add titles to tables
+        # bslib::card_title()
+        gt_output(outputId = "check_battery_daily"),
+        gt_output(outputId = "check_battery_hourly")
         
       ),
       layout_column_wrap(
@@ -263,11 +265,11 @@ ui <- page_navbar(
           title = "Timeseries",
           nav_panel(
             "Daily",
-            plotlyOutput(outputId = "plot_battery_daily") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_daily")
           ),
           nav_panel(
             "Hourly",
-            plotlyOutput(outputId = "plot_battery_hourly") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_hourly")
           )
         ),
         navset_card_tab(
@@ -275,15 +277,15 @@ ui <- page_navbar(
           title = "Voltage",
           nav_panel(
             "Min Temp",
-            plotlyOutput(outputId = "plot_battery_min_temp") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_min_temp") 
           ),
           nav_panel(
             "Max Temp",
-            plotlyOutput(outputId = "plot_battery_max_temp") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_max_temp") 
           ),
           nav_panel(
             "Solar Radiation",
-            plotlyOutput(outputId = "plot_battery_sol_rad") |> withSpinner(4)
+            plotlyOutput(outputId = "plot_battery_sol_rad") 
           )
         )
       )
