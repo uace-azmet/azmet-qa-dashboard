@@ -1,7 +1,7 @@
 library(shiny)
 library(bslib)
 library(bsicons)
-library(shinycssloaders)
+library(shinybusy)
 library(shinyWidgets)
 library(htmltools)
 
