@@ -36,8 +36,8 @@ hourly <- hourly |>
   mutate(date_datetime = ceiling_date(date_datetime, unit = "hour"))
 ```
 
-
-Create a finer grid to get more than one estimate per hour for instantaneous solar radiation.  Used to estimate area under the curve with midpoint rule.
+Create a finer grid to get more than one estimate per hour for instantaneous solar radiation.
+Used to estimate area under the curve with midpoint rule.
 
 ```{r}
 dx_min <- 2 #length of bins in minutes
@@ -68,7 +68,6 @@ hourly_grid <-
   mutate(doy = yday(grid_dates),
          hour = as_hms(grid_dates) |> as.duration() |> as.numeric("hours"))
 ```
-
 
 Calculate instantaneous solar radiation at each point (using one possible method)
 
@@ -106,7 +105,6 @@ sol_rad_grid <-
   mutate(solar_rad = set_units(solar_rad, "W m-2"))
 ```
 
-
 Let's see how the finer grid compares to the true data
 
 ```{r}
@@ -118,6 +116,7 @@ ggplot(aes(x = grid_dates)) +
   scale_x_datetime(date_labels = "%H:%M", date_breaks = "30 mins") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
 Still don't quite understand how these match up
 
 Try integrating area under the curve
@@ -144,5 +143,6 @@ left_join(hourly, sol_rad_max) |>
   ggplot(aes(x = date_datetime)) +
   geom_line(aes(y = sol_rad_total)) +
   geom_line(aes(y = sol_rad_max), color = "red") +
-  facet_wrap(~meta_station_id)
+  facet_wrap(~meta_station_id) +
+  scale_x_datetime(date_breaks = "hour")
 ```
