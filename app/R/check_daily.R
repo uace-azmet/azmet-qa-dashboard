@@ -89,6 +89,11 @@ check_daily <- function(daily) {
         meta_station_id %in% c("az42", "az43"), #no rain gauge here
       description = "Rain gauge reporting"
     ) |> 
+    # This could be here or in the battery tab
+    data.validator::validate_if(
+      !is.na(meta_bat_volt_mean),
+      description = "Battery voltage reporting"
+    ) |> 
     data.validator::add_results(report)
   
   
