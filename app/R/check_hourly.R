@@ -38,7 +38,8 @@ check_hourly <- function(hourly) {
         .complete = TRUE
       )
     ) |> 
-    ungroup()
+    ungroup() |> 
+    calc_sol_rad_theoretical()
   
   report <- data.validator::data_validation_report()
   data.validator::validate(hourly, name = "Hourly Data") |>
@@ -50,6 +51,7 @@ check_hourly <- function(hourly) {
     validate_if(temp_airC_delta, "|∆`temp_airC`| ≤ 19.4") |> 
     validate_if(relative_humidity_delta, "|∆`relative_humidity`| ≤ 50") |>
     validate_if(wind_spd_delta, "|∆`wind_spd_mps`| ≤ 10.3") |> 
+    validate_if(lte(sol_rad_total, sol_rad_est, na_pass = TRUE, tol = 0.01), "`sol_rad_total` ≤ theoretical max") |> 
     #TODO would be nice if CSV would contain all 14+ hours in a row maybe?
     validate_if(sol_rad_total_14 | is.na(sol_rad_total_14),
                 "`sol_rad_total` not < 0.1 for more than 14 hrs") |> 
