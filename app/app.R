@@ -255,9 +255,9 @@ ui <- page_navbar(
       card(
         full_screen = TRUE,
         card_header("Validation"),
-        #TODO add titles to tables
-        # bslib::card_title()
+        bslib::card_title("Daily"),
         gt_output(outputId = "check_battery_daily"),
+        bslib::card_title("Hourly"),
         gt_output(outputId = "check_battery_hourly")
       ),
       layout_column_wrap(
