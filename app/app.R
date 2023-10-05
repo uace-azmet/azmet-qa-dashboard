@@ -158,10 +158,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          # Unfortunately it is not easy to get plots to just fill their
-          # containers dynamically.  I chose this height based on what looks
-          # good on my laptop, but this could be adjusted.
-          plotOutput(outputId = "plot_daily", height = 550) 
+          plotOutput(outputId = "plot_daily") 
         )
       )
     )
@@ -200,7 +197,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_hourly", height = 550) 
+          plotOutput(outputId = "plot_hourly") 
         )
       )
     )
@@ -241,46 +238,53 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_fc", height = 550) 
+          plotOutput(outputId = "plot_fc") 
         )
       )
     )
   ),
   ## Battery ----
   nav_panel(
-    title = "Battery",
+    "Battery",
     layout_column_wrap(
-      width = NULL,
+      width = 1/2,
       height = "100%",
-      fill = FALSE,
-      style = css(grid_template_columns = "1fr 1.5fr"),
       card(
         full_screen = TRUE,
-        card_header(
-          "Daily Data"
-        ),
-        gt_output(outputId = "check_battery_daily") 
+        card_header("Validation"),
+        gt_output(outputId = "check_battery_daily"),
+        gt_output(outputId = "check_battery_hourly")
       ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Daily Data"
+      layout_column_wrap(
+        width = 1,
+        navset_card_tab(
+          full_screen = TRUE,
+          title = "Timeseries",
+          nav_panel(
+            "Daily",
+            plotlyOutput(outputId = "plot_battery_daily")
+          ),
+          nav_panel(
+            "Hourly",
+            plotlyOutput(outputId = "plot_battery_hourly")
+          )
         ),
-        plotlyOutput(outputId = "plot_battery_daily", height = "300px") 
-      ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Hourly Data"
-        ),
-        gt_output(outputId = "check_battery_hourly") 
-      ),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Hourly Data"
-        ),
-        plotlyOutput(outputId = "plot_battery_hourly", height = "300px") 
+        navset_card_tab(
+          full_screen = TRUE,
+          title = "Voltage",
+          nav_panel(
+            "Min Temp",
+            plotlyOutput(outputId = "plot_battery_min_temp") 
+          ),
+          nav_panel(
+            "Max Temp",
+            plotlyOutput(outputId = "plot_battery_max_temp") 
+          ),
+          nav_panel(
+            "Solar Radiation",
+            plotlyOutput(outputId = "plot_battery_sol_rad") 
+          )
+        )
       )
     )
   )
@@ -447,7 +451,7 @@ server <- function(input, output, session) {
         report_battery_daily <- check_battery_daily(daily)
         
         #convert to gt table
-        format_report_gt(report_battery_daily, daily)
+        format_report_gt(report_battery_daily, daily, title = "Daily")
       })
       
       output$check_battery_hourly <- gt::render_gt({
@@ -458,7 +462,7 @@ server <- function(input, output, session) {
         report_battery_hourly <- check_battery_hourly(hourly)
         
         #convert to gt table
-        format_report_gt(report_battery_hourly, hourly)
+        format_report_gt(report_battery_hourly, hourly, title = "Hourly")
       })
       
       #TODO move plotting code to function?
@@ -495,6 +499,16 @@ server <- function(input, output, session) {
           theme(legend.position = "none", axis.title.x = element_blank())
         
         ggplotly(h_daily)
+      })
+      #TODO could probably streamline this by passing tab name to function as variable and conditionally rendering or something
+      output$plot_battery_min_temp <- renderPlotly({
+        plot_voltage(daily, "temp_air_minC")
+      })
+      output$plot_battery_max_temp <- renderPlotly({
+        plot_voltage(daily, "temp_air_maxC")
+      })
+      output$plot_battery_sol_rad <- renderPlotly({
+        plot_voltage(daily, "sol_rad_total")
       })
       shinybusy::remove_modal_spinner()
     }
