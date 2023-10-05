@@ -1,14 +1,18 @@
 #' @param na_pass logical; do NAs count as passing the validation step?
-gte <- function(x,y, na_pass = FALSE) {
-  res <- x >= y
+#' @param tol tolerance; passed on to `all.equal()` to evaluate the "equal" part
+#'   of greater than or equal to
+gte <- function(x,y, na_pass = FALSE, tol = sqrt(.Machine$double.eps)) {
+  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol)))
+  res <- x > y | eq
   if(isTRUE(na_pass)) {
     res <- ifelse(is.na(res), TRUE, res)
   }
   res
 }
 
-lte <- function(x,y, na_pass = FALSE) {
-  res <- x <= y
+lte <- function(x,y, na_pass = FALSE, tol = sqrt(.Machine$double.eps)) {
+  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol)))
+  res <- x < y | eq
   if(isTRUE(na_pass)) {
     res <- ifelse(is.na(res), TRUE, res)
   }
