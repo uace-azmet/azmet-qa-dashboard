@@ -158,10 +158,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          # Unfortunately it is not easy to get plots to just fill their
-          # containers dynamically.  I chose this height based on what looks
-          # good on my laptop, but this could be adjusted.
-          plotOutput(outputId = "plot_daily", height = 550) 
+          plotOutput(outputId = "plot_daily") 
         )
       )
     )
@@ -200,7 +197,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_hourly", height = 550) 
+          plotOutput(outputId = "plot_hourly") 
         )
       )
     )
@@ -241,7 +238,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_fc", height = 550) 
+          plotOutput(outputId = "plot_fc") 
         )
       )
     )
