@@ -252,9 +252,7 @@ ui <- page_navbar(
       card(
         full_screen = TRUE,
         card_header("Validation"),
-        bslib::card_title("Daily"),
         gt_output(outputId = "check_battery_daily"),
-        bslib::card_title("Hourly"),
         gt_output(outputId = "check_battery_hourly")
       ),
       layout_column_wrap(
@@ -453,7 +451,7 @@ server <- function(input, output, session) {
         report_battery_daily <- check_battery_daily(daily)
         
         #convert to gt table
-        format_report_gt(report_battery_daily, daily)
+        format_report_gt(report_battery_daily, daily, title = "Daily")
       })
       
       output$check_battery_hourly <- gt::render_gt({
@@ -464,7 +462,7 @@ server <- function(input, output, session) {
         report_battery_hourly <- check_battery_hourly(hourly)
         
         #convert to gt table
-        format_report_gt(report_battery_hourly, hourly)
+        format_report_gt(report_battery_hourly, hourly, title = "Hourly")
       })
       
       #TODO move plotting code to function?

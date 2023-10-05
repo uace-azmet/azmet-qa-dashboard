@@ -4,13 +4,13 @@
 #' @param data original data frame used to generate the report
 #'
 #' @return a `gt` table
-format_report_gt <- function(report, data) {
+format_report_gt <- function(report, data, title = NULL) {
   #TODO make warn_at and error_at arguments so they can be adjusted in the dashboard maybe?
   #TODO would it be possible to add a header to the table that displays these thresholds?
   warn_at <- 1 #warn if ≥ 1 row fails a validation
   error_at <- 0.01 #error if ≥ 1% of rows fail validation
   
-  report |> 
+  table <- report |> 
     #for some reason, report has duplicated rows. Seems like a bug in data.validator
     slice_head(n = 1, by = assertion.id) |> 
     mutate(n_failed = if_else(is.na(num.violations), 0, num.violations),
@@ -52,6 +52,11 @@ format_report_gt <- function(report, data) {
     ) |> 
     fmt_percent(p_failed) |> 
     fmt_markdown(columns = c(validation, bad_rows))
+  
+  if (!is.null(title)) {
+    table <- table |> tab_header(title = md(title))
+  }
+  table
 }
 
 
