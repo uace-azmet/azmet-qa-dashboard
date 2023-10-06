@@ -469,7 +469,7 @@ server <- function(input, output, session) {
       output$plot_battery_hourly <- renderPlotly({
         h_time <-
           ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
-          geom_line(aes(color = meta_station_id)) +
+          geom_line(aes(color = meta_station_name)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
           geom_hline(aes(yintercept = 16), color = "orange") +
           geom_hline(aes(yintercept = 20), color = "red") +
@@ -485,7 +485,7 @@ server <- function(input, output, session) {
           ggplot(aes(x = datetime, y = meta_bat_volt_mean)) +
           geom_ribbon(aes(ymin = meta_bat_volt_min,
                           ymax = meta_bat_volt_max,
-                          fill = meta_station_id),
+                          fill = meta_station_name),
                       alpha = 0.15) +
           geom_line(aes(color = meta_station_id)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
@@ -500,7 +500,8 @@ server <- function(input, output, session) {
         
         ggplotly(h_daily)
       })
-      #TODO could probably streamline this by passing tab name to function as variable and conditionally rendering or something
+      
+      # Scatter plots
       output$plot_battery_min_temp <- renderPlotly({
         plot_voltage(daily, "temp_air_minC")
       })
