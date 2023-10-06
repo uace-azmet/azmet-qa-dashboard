@@ -5,6 +5,7 @@ solar_radiation_total <- function(doy, psi, tau, elev, rho) {
   purrr::pmap(list(doy, psi, tau, elev, rho), solar_radiation) |> 
     purrr::map_dbl(sum) 
 }
+#TODO speed this up by getting rid of `units` (i.e. need to figure out the unit conversions "by hand")
 
 calc_sol_rad_theoretical <- function(hourly) {
   # NOTE: this calculation of midpoint is NOT ROBUST. Decimal values will get
@@ -49,7 +50,7 @@ calc_sol_rad_theoretical <- function(hourly) {
     ## hour, multiplying by bin width (1/n()) and then re-joining to the
     ## original dataset
     summarize(
-      sol_rad_est = sum(signif(sol_rad_est, 3) * set_units(1/n(), "hr")) |>
+      sol_rad_est = sum(signif(sol_rad_est, 3) * set_units(1/n(), "hr"), na.rm = TRUE) |>
         #convert to same units as data
         set_units("MJ m-2"),
       .by = c(meta_station_id, meta_station_name, date_datetime)
