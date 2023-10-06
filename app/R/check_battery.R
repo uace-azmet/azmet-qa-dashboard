@@ -29,6 +29,10 @@ check_battery_daily <- function(daily) {
     validate_if(gte(meta_bat_volt_min, 9.6, na_pass = TRUE), "`meta_bat_volt_min` ≥ 9.6") |> 
     validate_if(lte(meta_bat_volt_max, 16, na_pass = TRUE), "`meta_bat_volt_max` ≤ 16") |> 
     validate_if(lte(meta_bat_volt_anomaly, 1, na_pass = TRUE), "∆ voltage from 10-day mean ≤ 1") |> 
+    data.validator::validate_if(
+      !is.na(meta_bat_volt_mean),
+      description = "Battery voltage reporting"
+    ) |> 
     add_results(report)
   
   get_results(report) |> 
@@ -71,6 +75,10 @@ check_battery_hourly <- function(hourly) {
     validate_if(gte(meta_bat_volt, 9.6, na_pass = TRUE), "`meta_bat_volt` ≥ 9.6") |> 
     validate_if(lte(meta_bat_volt, 16, na_pass = TRUE), "`meta_bat_volt` ≤ 16") |> 
     validate_if(lte(meta_bat_volt_anomaly, 2, na_pass = TRUE), "∆ voltage from 10-hr mean ≤ 2") |> 
+    data.validator::validate_if(
+      !is.na(meta_bat_volt),
+      description = "Battery voltage reporting"
+    ) |> 
     add_results(report)
   
   get_results(report) |> 
