@@ -40,27 +40,37 @@ calc_sol_rad_theoretical <- function(hourly) {
       sol_rad_est = solar_radiation_total(
         doy = yday(date_datetime),
         psi = psi * pi / 180,
-        tau = 1, #atmospheric transmissivity, leave at 1 for estimating max theoretical solar radiation
+        tau = 0.7, #atmospheric transmissivity, leave at 1 for estimating max theoretical solar radiation
         elev = elev_m,
-        rho = 0.4 #typical albedo values: desert sand, 0.4; concrete, 0.55; bare soil, 0.17; asphalt, 0.04
-      ) |> set_units("W m-2"),
-      sol_rad_total = set_units(sol_rad_total, "MJ/m^2")
+        rho = 0.5 #typical albedo values: desert sand, 0.4; concrete, 0.55; bare soil, 0.17; asphalt, 0.04
+      ) # in W/m^2
     ) |> 
     ## Convert instantaneous solar radiation to hourly total by summing over the
     ## hour, multiplying by bin width (1/n()) and then re-joining to the
     ## original dataset
     summarize(
-      sol_rad_est = sum(signif(sol_rad_est, 3) * set_units(1/n(), "hr"), na.rm = TRUE) |>
-        #convert to same units as data
-        set_units("MJ m-2"),
+      sol_rad_est = sum(sol_rad_est * (1/n()), na.rm = TRUE),
       .by = c(meta_station_id, meta_station_name, date_datetime)
     ) |>
+    mutate(
+      #convert to same units as azmet data: 1 W*hr/m^2 = 0.0036 MJ/m^2,
+      sol_rad_est = sol_rad_est * 0.0036
+    ) |> 
     # Sensor totals are for the previous hour, so lag estimates to match
     mutate(sol_rad_est = lag(sol_rad_est)) |> 
-    mutate(sol_rad_est = signif(sol_rad_est, 1)) |>
     right_join(hourly, by = join_by(meta_station_id, meta_station_name, date_datetime))
 }
-# hourly <- az_hourly()
-# hourly_calced <- calc_sol_rad_max(hourly) 
-# 
+# hourly <- az_hourly(start = "2023-05-29 00", end = "2023-6-05 23")
+# hourly_calced <- calc_sol_rad_theoretical(hourly)
 # nrow(hourly) == nrow(hourly_calced)
+# 
+# hourly_calced |>
+#   filter(!lte(sol_rad_total, sol_rad_est, tol = 0.5)) |>
+#   select(date_datetime, sol_rad_est, sol_rad_total)
+# 
+# hourly_calced |> 
+#   filter(meta_station_id %in% c("az01", "az40")) |> 
+# ggplot(aes(x = date_datetime)) +
+#   geom_line(aes(y = sol_rad_total, color = "Observed")) +
+#   geom_line(aes(y = sol_rad_est, color = "Theoretical max")) +
+#   facet_wrap(~meta_station_id)

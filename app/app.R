@@ -15,6 +15,7 @@ library(plotly)
 library(slider)
 library(units)
 library(patchwork)
+library(hms)
 
 # Everything in R/ should be sourced automatically, but I found I needed to add
 # these to get it to work.  Not sure why.

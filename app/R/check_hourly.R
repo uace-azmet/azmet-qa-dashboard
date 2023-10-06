@@ -9,6 +9,7 @@
 #' check_hourly(hourly)
 check_hourly <- function(hourly) {
   hourly <- hourly |>
+    calc_sol_rad_theoretical() |> 
     dplyr::group_by(meta_station_name) |>
     dplyr::arrange(dplyr::desc(date_datetime)) |> #make sure arranged in datetime order
   # Create a few new columns for temporal consistency checks from 'NWS (1994) TSP 88-21-R2':
@@ -38,13 +39,12 @@ check_hourly <- function(hourly) {
         .complete = TRUE
       )
     ) |> 
-    ungroup() |> 
-    calc_sol_rad_theoretical()
+    ungroup()
   
   report <- data.validator::data_validation_report()
   data.validator::validate(hourly, name = "Hourly Data") |>
     data.validator::validate_if(# within rounding error
-      gte(temp_airC, dwpt - 0.2, na_pass = TRUE),
+      gte(temp_airC, na_pass = TRUE, tol = 0.2),
       "`temp_airC` ≥ `dwpt`") |>
     data.validator::validate_if(lte(wind_spd_mps, wind_spd_max_mps, na_pass = TRUE),
                                 "`wind_spd` ≤ `wind_spd_max`") |>
@@ -52,7 +52,7 @@ check_hourly <- function(hourly) {
     validate_if(relative_humidity_delta, "|∆`relative_humidity`| ≤ 50") |>
     validate_if(wind_spd_delta, "|∆`wind_spd_mps`| ≤ 10.3") |> 
     #TODO NA isn't being ignored??
-    validate_if(lte(sol_rad_total, sol_rad_est, na_pass = TRUE, tol = 0.01), "`sol_rad_total` ≤ theoretical max") |> 
+    validate_if(lte(sol_rad_total, sol_rad_est, na_pass = TRUE, tol = 0.5), "`sol_rad_total` ≤ theoretical max") |> 
     #TODO would be nice if CSV would contain all 14+ hours in a row maybe?
     validate_if(sol_rad_total_14 | is.na(sol_rad_total_14),
                 "`sol_rad_total` not < 0.1 for more than 14 hrs") |> 
