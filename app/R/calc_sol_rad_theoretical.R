@@ -1,20 +1,24 @@
-library(TrenchR)
+# library(TrenchR)
 
 # Wrapper to sum direct, diffuse, and reflected solar radiation output by `solar_radiation()`
 solar_radiation_total <- function(doy, psi, tau, elev, rho) {
   purrr::pmap(list(doy, psi, tau, elev, rho), solar_radiation) |> 
     purrr::map_dbl(sum) 
 }
-#TODO speed this up by getting rid of `units` (i.e. need to figure out the unit conversions "by hand")
 
-calc_sol_rad_theoretical <- function(hourly) {
+#TODO: make this work for daily data too.
+# - conditionally use different date column name
+# - expand_grid differently depending on hourly vs daily
+# - sum values differently depending on hourly vs daily
+
+calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
   # NOTE: this calculation of midpoint is NOT ROBUST. Decimal values will get
   # coerced to integers and then be wrong. Edit with caution!
   n_segments <- 10L
   start <- 0 + (1/2 * 1/n_segments)
   midpts <- seq(start, by = 1/n_segments, length.out = n_segments) * 60
   
-  left_join(hourly, station_info, by = join_by(meta_station_id, meta_station_name)) |> 
+  left_join(data, station_info, by = join_by(meta_station_id, meta_station_name)) |> 
     select(meta_station_id, meta_station_name, date_datetime, latitude, longitude, elev_m, sol_rad_total) |> 
     expand_grid(
       minute = midpts
@@ -58,7 +62,7 @@ calc_sol_rad_theoretical <- function(hourly) {
     ) |> 
     # Sensor totals are for the previous hour, so lag estimates to match
     mutate(sol_rad_est = lag(sol_rad_est), .by = meta_station_id) |> 
-    right_join(hourly, by = join_by(meta_station_id, meta_station_name, date_datetime))
+    right_join(data, by = join_by(meta_station_id, meta_station_name, date_datetime))
 }
 # hourly <- az_hourly(start = "2023-05-29 00", end = "2023-6-05 23")
 # hourly_calced <- calc_sol_rad_theoretical(hourly)
