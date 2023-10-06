@@ -40,7 +40,7 @@ calc_sol_rad_theoretical <- function(hourly) {
       sol_rad_est = solar_radiation_total(
         doy = yday(date_datetime),
         psi = psi * pi / 180,
-        tau = 0.7, #atmospheric transmissivity, leave at 1 for estimating max theoretical solar radiation
+        tau = 0.7, #atmospheric transmissivity, 0.7 is probably reasonable, but could also leave at 1 for estimating max theoretical solar radiation
         elev = elev_m,
         rho = 0.5 #typical albedo values: desert sand, 0.4; concrete, 0.55; bare soil, 0.17; asphalt, 0.04
       ) # in W/m^2
