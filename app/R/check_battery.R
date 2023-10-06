@@ -18,17 +18,23 @@ check_battery_daily <- function(daily) {
       meta_bat_volt_anomaly = abs(meta_bat_volt_mean - meta_bat_mean_rollmean),
       .by = meta_station_id
     ) 
-
+  
   #initialize report
   report <- data.validator::data_validation_report()
   
   #validation
   data.validator::validate(daily, name = "Daily") |>
-    validate_if(btwn(meta_bat_volt_mean, meta_bat_volt_min, meta_bat_volt_max),
-                description = "`meta_bat_volt_*` (min ≤ mean ≤ max)") |> 
-    validate_if(meta_bat_volt_min >= 9.6, "`meta_bat_volt_min` ≥ 9.6") |> 
-    validate_if(meta_bat_volt_max <= 16, "`meta_bat_volt_max` ≤ 16") |> 
+    validate_if(
+      btwn(meta_bat_volt_mean, meta_bat_volt_min, meta_bat_volt_max, na_pass = TRUE),
+      description = "`meta_bat_volt_*` (min ≤ mean ≤ max)"
+    ) |> 
+    validate_if(gte(meta_bat_volt_min, 9.6, na_pass = TRUE), "`meta_bat_volt_min` ≥ 9.6") |> 
+    validate_if(lte(meta_bat_volt_max, 16, na_pass = TRUE), "`meta_bat_volt_max` ≤ 16") |> 
     validate_if(lte(meta_bat_volt_anomaly, 1, na_pass = TRUE), "∆ voltage from 10-day mean ≤ 1") |> 
+    data.validator::validate_if(
+      !is.na(meta_bat_volt_mean),
+      description = "Battery voltage reporting"
+    ) |> 
     add_results(report)
   
   get_results(report) |> 
@@ -68,9 +74,13 @@ check_battery_hourly <- function(hourly) {
   
   #validation
   data.validator::validate(hourly, "Hourly") |> 
-    validate_if(meta_bat_volt >= 9.6, "`meta_bat_volt` ≥ 9.6") |> 
-    validate_if(meta_bat_volt <= 16, "`meta_bat_volt` ≤ 16") |> 
+    validate_if(gte(meta_bat_volt, 9.6, na_pass = TRUE), "`meta_bat_volt` ≥ 9.6") |> 
+    validate_if(lte(meta_bat_volt, 16, na_pass = TRUE), "`meta_bat_volt` ≤ 16") |> 
     validate_if(lte(meta_bat_volt_anomaly, 2, na_pass = TRUE), "∆ voltage from 10-hr mean ≤ 2") |> 
+    data.validator::validate_if(
+      !is.na(meta_bat_volt),
+      description = "Battery voltage reporting"
+    ) |> 
     add_results(report)
   
   get_results(report) |> 

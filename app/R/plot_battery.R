@@ -18,7 +18,6 @@
 
 #TODO add toggle for min/max error bars?
 #TODO make new points stand out even more (e.g. change shape)
-#TODO use station name instead of ID in tooltip
 plot_voltage <- function(check_data, xvar = c("temp_air_minC", "temp_air_maxC", "sol_rad_total")) {
   daily_historic <- read_csv("daily_historic.csv")
   xvar <- match.arg(xvar)
@@ -42,7 +41,7 @@ plot_voltage <- function(check_data, xvar = c("temp_air_minC", "temp_air_maxC", 
     ) |>
     add_markers(
       data = check_data,
-      color = ~ meta_station_id,
+      color = ~ meta_station_name,
       ## adds error bars for min and max voltage, but doesn't look great
       # error_y = ~list(
       #   symmetric = FALSE, array = meta_bat_volt_max, arrayminus = meta_bat_volt_min
