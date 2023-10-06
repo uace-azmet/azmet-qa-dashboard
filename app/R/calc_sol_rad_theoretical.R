@@ -57,7 +57,7 @@ calc_sol_rad_theoretical <- function(hourly) {
       sol_rad_est = sol_rad_est * 0.0036
     ) |> 
     # Sensor totals are for the previous hour, so lag estimates to match
-    mutate(sol_rad_est = lag(sol_rad_est)) |> 
+    mutate(sol_rad_est = lag(sol_rad_est), .by = meta_station_id) |> 
     right_join(hourly, by = join_by(meta_station_id, meta_station_name, date_datetime))
 }
 # hourly <- az_hourly(start = "2023-05-29 00", end = "2023-6-05 23")
