@@ -11,6 +11,8 @@
 check_daily <- function(daily) {
   report <- data.validator::data_validation_report()
   
+  daily <- calc_sol_rad_theoretical(daily, freq = "daily") 
+  
   data.validator::validate(daily, name = "Daily Data") |>
     # Internal consistency checks from 'NWS (1994) TSP 88-21-R2':
     data.validator::validate_if(gte(temp_air_meanC, dwpt_mean, na_pass = TRUE),
@@ -32,6 +34,8 @@ check_daily <- function(daily) {
       ),
       description = "`wind_spd_mean_mps` ≤ `wind_spd_max_mps`"
     ) |>
+    validate_if(lte(sol_rad_total, sol_rad_est, na_pass = TRUE),
+                "`sol_rad_total` ≤ theoretical max") |> 
     data.validator::validate_if(
       btwn(
         relative_humidity_mean,
