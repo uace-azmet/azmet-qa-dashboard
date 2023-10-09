@@ -2,7 +2,7 @@
 #' @param tol tolerance; passed on to `all.equal()` to evaluate the "equal" part
 #'   of greater than or equal to
 gte <- function(x,y, na_pass = FALSE, tol = sqrt(.Machine$double.eps)) {
-  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol)))
+  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol, scale = 1)))
   res <- x > y | eq
   if(isTRUE(na_pass)) {
     res <- ifelse(is.na(res), TRUE, res)
@@ -11,7 +11,7 @@ gte <- function(x,y, na_pass = FALSE, tol = sqrt(.Machine$double.eps)) {
 }
 
 lte <- function(x,y, na_pass = FALSE, tol = sqrt(.Machine$double.eps)) {
-  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol)))
+  eq <- purrr::map2_lgl(x, y, \(x,y) isTRUE(all.equal(x,y, tolerance = tol, scale = 1)))
   res <- x < y | eq
   if(isTRUE(na_pass)) {
     res <- ifelse(is.na(res), TRUE, res)
