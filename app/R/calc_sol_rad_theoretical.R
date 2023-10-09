@@ -124,7 +124,7 @@ calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
     right_join(data, by = join_by(meta_station_id, meta_station_name, {{ date_col }}))
 }
 
-# hourly <- az_hourly(start = "2023-05-29 00", end = "2023-6-05 23")
+# hourly <- az_hourly(start = "2023-05-29 00", end = "2023-05-30 23")
 # hourly_calced <- calc_sol_rad_theoretical(hourly)
 # nrow(hourly) == nrow(hourly_calced)
 # 
@@ -133,20 +133,20 @@ calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
 #   select(date_datetime, sol_rad_est, sol_rad_total)
 # 
 # hourly_calced |>
-#   filter(meta_station_id %in% c("az01", "az40")) |>
+#   filter(meta_station_id %in% c("az01")) |>
 # ggplot(aes(x = date_datetime)) +
 #   geom_line(aes(y = sol_rad_total, color = "Observed")) +
 #   geom_line(aes(y = sol_rad_est, color = "Theoretical max")) +
 #   facet_wrap(~meta_station_id)
 # 
-# daily <- az_daily(start = "2023-05-29", end = "2023-06-05")
+# daily <- az_daily(start = "2022-10-10", end = "2023-10-10")
 # daily_calced <- calc_sol_rad_theoretical(daily, "daily")
-# daily_calced |> 
+# daily_calced |>
 #   filter(!lte(sol_rad_total, sol_rad_est)) |>
 #   select(datetime, sol_rad_est, sol_rad_total)
 # 
 # daily_calced |>
-#   filter(meta_station_id %in% c("az01", "az40")) |>
+#   filter(meta_station_id %in% c("az01")) |>
 #   ggplot(aes(x = datetime)) +
 #   geom_line(aes(y = sol_rad_total, color = "Observed")) +
 #   geom_line(aes(y = sol_rad_est, color = "Theoretical max")) +
