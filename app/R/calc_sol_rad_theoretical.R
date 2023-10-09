@@ -6,11 +6,16 @@ solar_radiation_total <- function(doy, psi, tau, elev, rho) {
     purrr::map_dbl(sum) 
 }
 
-#TODO: make this work for daily data too.
-# - conditionally use different date column name
-# - expand_grid differently depending on hourly vs daily
-# - sum values differently depending on hourly vs daily
 
+
+#' Calculate theoretical maximum solar radiation
+#'
+#' @param data data returned by either `az_daily()` or `az_hourly()`
+#' @param freq indicator of whether `data` is hourly or daily (default is hourly)
+#'
+#' @return `data`, but with a `sol_rad_est` column indicating the estimated
+#'   theoretical maximum solar radiation for that date or datetime
+#'   
 calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
   # hourly and daily data have slightly different formats, so must deal with that
   freq <- match.arg(freq)
