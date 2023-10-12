@@ -487,7 +487,7 @@ server <- function(input, output, session) {
                           ymax = meta_bat_volt_max,
                           fill = meta_station_name),
                       alpha = 0.15) +
-          geom_line(aes(color = meta_station_id)) +
+          geom_line(aes(color = meta_station_name)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
           geom_hline(aes(yintercept = 16), color = "orange") +
           geom_hline(aes(yintercept = 20), color = "red") +
