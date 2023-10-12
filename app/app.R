@@ -132,8 +132,8 @@ ui <- page_navbar(
       card(
         # max_height = 250,
         full_screen = TRUE,
-        gt_output(outputId = "check_daily"),
-        gt_output(outputId = "reporting_daily")
+        gt_output(outputId = "reporting_daily"),
+        gt_output(outputId = "check_daily")
         
       ),
       
@@ -173,8 +173,8 @@ ui <- page_navbar(
       style = css(grid_template_columns = "1fr 1.5fr"),
       card(
         full_screen = TRUE,
-        gt_output(outputId = "check_hourly"),
-        gt_output(outputId = "reporting_hourly")
+        gt_output(outputId = "reporting_hourly"),
+        gt_output(outputId = "check_hourly")
       ),
       card(
         full_screen = TRUE,
@@ -316,12 +316,12 @@ server <- function(input, output, session) {
         report_daily <- check_daily(daily)
         
         #convert to gt table
-        format_report_gt(report_daily, daily, title = "Data Validation")
+        format_report_gt(report_daily, daily, title = "Data Values")
         
       })
       output$reporting_daily <- gt::render_gt({
         input$dailyrange
-        format_report_gt(reporting_daily(daily), daily, title = "Check Reporting")
+        format_report_gt(reporting_daily(daily), daily, title = "Data Reporting")
       })
       output$plot_daily <- renderPlot({
         #reload when input changes
@@ -367,11 +367,11 @@ server <- function(input, output, session) {
         report_hourly <- check_hourly(hourly)
         
         #convert to gt table
-        format_report_gt(report_hourly, hourly, title = "Data Validation")
+        format_report_gt(report_hourly, hourly, title = "Data Values")
       })
       output$reporting_hourly <- gt::render_gt({
         input$hourlyrange
-        format_report_gt(reporting_hourly(hourly), hourly, title = "Check Reporting")
+        format_report_gt(reporting_hourly(hourly), hourly, title = "Data Reporting")
       })
       output$plot_hourly <- renderPlot({
         # force reload as soon as input changes
