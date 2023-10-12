@@ -134,10 +134,9 @@ ui <- page_navbar(
       card(
         # max_height = 250,
         full_screen = TRUE,
-        card_header(
-          "Daily Data Validation"
-        ),
+        gt_output(outputId = "reporting_daily"),
         gt_output(outputId = "check_daily")
+        
       ),
       
       # card for plots with its own sidebar inputs for station and variables
@@ -176,10 +175,8 @@ ui <- page_navbar(
       style = css(grid_template_columns = "1fr 1.5fr"),
       card(
         full_screen = TRUE,
-        card_header(
-          "Hourly Data Validation"
-        ),
-        gt_output(outputId = "check_hourly") 
+        gt_output(outputId = "reporting_hourly"),
+        gt_output(outputId = "check_hourly")
       ),
       card(
         full_screen = TRUE,
@@ -321,8 +318,12 @@ server <- function(input, output, session) {
         report_daily <- check_daily(daily)
         
         #convert to gt table
-        format_report_gt(report_daily, daily)
+        format_report_gt(report_daily, daily, title = "Data Values")
         
+      })
+      output$reporting_daily <- gt::render_gt({
+        input$dailyrange
+        format_report_gt(reporting_daily(daily), daily, title = "Data Reporting")
       })
       output$plot_daily <- renderPlot({
         #reload when input changes
@@ -368,7 +369,11 @@ server <- function(input, output, session) {
         report_hourly <- check_hourly(hourly)
         
         #convert to gt table
-        format_report_gt(report_hourly, hourly)
+        format_report_gt(report_hourly, hourly, title = "Data Values")
+      })
+      output$reporting_hourly <- gt::render_gt({
+        input$hourlyrange
+        format_report_gt(reporting_hourly(hourly), hourly, title = "Data Reporting")
       })
       output$plot_hourly <- renderPlot({
         # force reload as soon as input changes
@@ -469,9 +474,10 @@ server <- function(input, output, session) {
       
       #TODO move plotting code to function?
       output$plot_battery_hourly <- renderPlotly({
+        #TODO speed up by making with pure plotly
         h_time <-
           ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
-          geom_line(aes(color = meta_station_id)) +
+          geom_line(aes(color = meta_station_name)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
           geom_hline(aes(yintercept = 16), color = "orange") +
           geom_hline(aes(yintercept = 20), color = "red") +
@@ -482,14 +488,15 @@ server <- function(input, output, session) {
       })
       
       output$plot_battery_daily <- renderPlotly({
+        #TODO: speed up by making in pure plotly
         h_daily <-
           daily |> 
           ggplot(aes(x = datetime, y = meta_bat_volt_mean)) +
           geom_ribbon(aes(ymin = meta_bat_volt_min,
                           ymax = meta_bat_volt_max,
-                          fill = meta_station_id),
+                          fill = meta_station_name),
                       alpha = 0.15) +
-          geom_line(aes(color = meta_station_id)) +
+          geom_line(aes(color = meta_station_name)) +
           geom_hline(aes(yintercept = 9.6), color = "red") +
           geom_hline(aes(yintercept = 16), color = "orange") +
           geom_hline(aes(yintercept = 20), color = "red") +
@@ -502,7 +509,8 @@ server <- function(input, output, session) {
         
         ggplotly(h_daily)
       })
-      #TODO could probably streamline this by passing tab name to function as variable and conditionally rendering or something
+      
+      # Scatter plots
       output$plot_battery_min_temp <- renderPlotly({
         plot_voltage(daily, "temp_air_minC")
       })

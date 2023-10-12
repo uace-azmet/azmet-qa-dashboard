@@ -12,7 +12,7 @@ check_hourly <- function(hourly) {
     calc_sol_rad_theoretical() |> 
     dplyr::group_by(meta_station_name) |>
     dplyr::arrange(dplyr::desc(date_datetime)) |> #make sure arranged in datetime order
-  # Create a few new columns for temporal consistency checks from 'NWS (1994) TSP 88-21-R2':
+    # Create a few new columns for temporal consistency checks from 'NWS (1994) TSP 88-21-R2':
     mutate(
       temp_airC_delta = check_delta(temp_airC, 19.4),
       relative_humidity_delta = check_delta(relative_humidity, 50),
@@ -60,6 +60,46 @@ check_hourly <- function(hourly) {
                 "`wind_spd_mps` not < 0.1 for more than 14 hrs") |> 
     validate_if(wind_vector_dir_14 | is.na(wind_vector_dir_14),
                 "`wind_vector_dir` not < 1 for more than 14 hrs") |> 
+    data.validator::add_results(report)
+  
+  get_results(report) |> 
+    # make `bad_rows` list-column with slices of data where there are problems
+    mutate(bad_rows = map(error_df, \(.x){
+      if(length(.x$index) > 0) {
+        hourly |> 
+          dplyr::slice(.x$index)
+      } else {
+        NA
+      }
+    })) |> 
+    
+    #use missing dates tibble for "all stations reporting" validation
+    mutate(bad_rows = ifelse(
+      table_name == "missing_dates" & type == "error",
+      list(
+        hourly_ts |>
+          tsibble::count_gaps(.full = end(), .name = c("gap_start", "gap_end", "n_missing"))
+      ),
+      bad_rows
+    ))
+}
+
+reporting_hourly <- function(hourly) {
+  report <- data.validator::data_validation_report()
+  # Check that all stations are reporting all dates
+  hourly_ts <- 
+    hourly |>
+    #round 23:59:59 to 00:00:00 of next day
+    dplyr::mutate(date_datetime = lubridate::ceiling_date(date_datetime, "hour")) |> 
+    tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = date_datetime)
+  
+  hourly_ts |>
+    tsibble::has_gaps(.full = end()) |> 
+    data.validator::validate(name = 'missing_dates') |>
+    data.validator::validate_cols(isFALSE, .gaps, description = "All stations reporting") |>
+    add_results(report)
+  
+  data.validator::validate(hourly, name = "Hourly Data") |> 
     data.validator::validate_if(
       !is.na(temp_soil_10cmC) &
         !is.na(temp_soil_50cmC) |
@@ -89,18 +129,7 @@ check_hourly <- function(hourly) {
     ) |> 
     data.validator::add_results(report)
   
-  # Check that all stations are reporting all dates
-  hourly_ts <- 
-    hourly |>
-    #round 23:59:59 to 00:00:00 of next day
-    dplyr::mutate(date_datetime = lubridate::ceiling_date(date_datetime, "hour")) |> 
-    tsibble::as_tsibble(key = c(meta_station_id, meta_station_name), index = date_datetime)
-  
-  hourly_ts |>
-    tsibble::has_gaps(.full = end()) |> 
-    data.validator::validate(name = 'missing_dates') |>
-    data.validator::validate_cols(isFALSE, .gaps, description = "All stations reporting") |>
-    add_results(report)
+
   
   get_results(report) |> 
     # make `bad_rows` list-column with slices of data where there are problems
