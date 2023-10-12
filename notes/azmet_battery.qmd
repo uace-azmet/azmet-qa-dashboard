@@ -1,0 +1,233 @@
+---
+title: "Battery Diagnostics Notes"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(azmetr)
+library(data.validator)
+library(slider)
+library(plotly)
+source(here::here("app/R/helpers.R"))
+```
+
+Get example data
+
+```{r}
+daily <- az_daily(start_date = "2022-08-10", end_date = "2023-08-10")
+hourly <- az_hourly(start = "2023-01-15 00", end = "2023-01-17 23")
+
+daily
+hourly
+```
+
+## Data Validations
+
+-   Voltage within range
+
+-   Voltage not changing dramatically from rolling mean (not sure by how much)
+
+### Use `slider` to calculate anomalies from rolling mean
+
+```{r}
+daily <- 
+  daily |> 
+  arrange(desc(datetime)) |> 
+  mutate(
+    #Calculate 10 day rolling mean of mean voltage (less than 10 days is allowed at start of timeseries)
+    meta_bat_mean_rollmean = slide_dbl(meta_bat_volt_mean, mean, .after = 10),
+    #Calculate anomaly from 10 day rolling mean
+    meta_bat_volt_anomaly = abs(meta_bat_volt_mean - meta_bat_mean_rollmean),
+    .by = meta_station_id
+  ) 
+
+hourly <- 
+  hourly |> 
+  arrange(desc(date_datetime)) |> 
+  mutate(
+    meta_bat_volt_rollmean = slide_dbl(meta_bat_volt, mean, .after = 10),
+    meta_bat_volt_anomaly = abs(meta_bat_volt - meta_bat_volt_rollmean),
+    .by = meta_station_id
+  )
+```
+
+What's a reasonable threshold?
+
+```{r}
+daily|> 
+  select(meta_station_name, datetime, starts_with("meta_bat_")) |> 
+  filter(meta_bat_volt_anomaly > 1)
+
+hourly |> 
+  select(meta_station_name, date_datetime, starts_with("meta_bat_")) |> 
+  filter(meta_bat_volt_anomaly > 2)
+```
+
+### Daily validations
+
+```{r}
+report <- data.validator::data_validation_report()
+
+data.validator::validate(daily, name = "Daily Data") |>
+  validate_if(btwn(meta_bat_volt_mean, meta_bat_volt_min, meta_bat_volt_max),
+              description = "`meta_bat_volt_*` (min ≤ mean ≤ max)") |> 
+  validate_if(meta_bat_volt_min >= 9.6, "`meta_bat_volt_min` ≥ 9.6") |> 
+  validate_if(meta_bat_volt_max <= 16, "`meta_bat_volt_max` ≤ 16") |> 
+  validate_if(lte(meta_bat_volt_anomaly, 1, na_pass = TRUE), "∆ voltage from 10-day mean ≤ 1") |> 
+  add_results(report)
+
+report
+get_results(report)
+```
+
+### Hourly validations
+
+```{r}
+report <- data.validator::data_validation_report()
+
+data.validator::validate(hourly, "Hourly Data") |> 
+  validate_if(meta_bat_volt >= 9.6, "`meta_bat_volt` ≥ 9.6") |> 
+  validate_if(meta_bat_volt <= 16, "`meta_bat_volt` ≤ 16") |> 
+  validate_if(lte(meta_bat_volt_anomaly, 2, na_pass = TRUE), "∆ voltage from rolling mean ≤ 1") |> #not sure how helpful this is with hourly data since spikes happen every morning with sunrise
+  add_results(report)
+
+report
+get_results(report)
+```
+
+## Visualizations
+
+### Timeseries
+
+Hourly
+
+```{r}
+h_time <- 
+  ggplot(hourly, aes(x = date_datetime, y = meta_bat_volt)) +
+  geom_line(aes(color = meta_station_id)) +
+  geom_hline(aes(yintercept = 9.6), color = "red") +
+  geom_hline(aes(yintercept = 16), color = "orange") +
+  geom_hline(aes(yintercept = 20), color = "red") +
+  scale_y_continuous(limits = range(hourly$meta_bat_volt, na.rm = TRUE)) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title= "hourly")
+ggplotly(h_time)
+```
+
+Daily
+
+```{r}
+h_daily <-
+  daily |> 
+  ggplot(aes(x = datetime, y = meta_bat_volt_mean)) +
+  geom_ribbon(aes(ymin = meta_bat_volt_min, ymax = meta_bat_volt_max, fill = meta_station_id), alpha = 0.15) +
+  geom_line(aes(color = meta_station_id)) +
+  geom_hline(aes(yintercept = 9.6), color = "red") +
+  geom_hline(aes(yintercept = 16), color = "orange") +
+  geom_hline(aes(yintercept = 20), color = "red") +
+  scale_y_continuous(limits = c(min(daily$meta_bat_volt_min, na.rm = TRUE), max(daily$meta_bat_volt_max, na.rm = TRUE))) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "daily")
+
+ggplotly(h_daily)
+```
+
+## Relationship with Sun and Temp
+
+### Solar radiation
+
+```{r}
+hourly_sol <- 
+  hourly |> 
+  ggplot(aes(x = sol_rad_total, y = meta_bat_volt)) +
+  geom_point(aes(color = meta_station_id), alpha = 0.2) +
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "hourly")
+hourly_sol
+```
+
+```{r}
+daily_sol <- 
+  daily |> 
+  ggplot(aes(x = sol_rad_total, y = meta_bat_volt_mean)) +
+  geom_point(aes(color = meta_station_id), alpha = 0.2) +
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "daily")
+daily_sol
+```
+
+### Air temp
+
+Hourly probably isn't very meaningful since it's just a few days in the winter
+
+```{r}
+hourly_temp <- 
+  hourly |> 
+  ggplot(aes(x = temp_airC, y = meta_bat_volt)) +
+  geom_point(aes(color = meta_station_id), alpha = 0.2) +
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "hourly")
+hourly_temp
+```
+
+```{r}
+daily_temp <- 
+  daily |> 
+  ggplot(aes(x = temp_air_meanC, y = meta_bat_volt_mean)) +
+  geom_point(aes(color = meta_station_id), alpha = 0.2) +
+  geom_smooth(se = FALSE) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "daily")
+daily_temp
+```
+
+slight negative slope with air temp
+
+## Modeling
+
+```{r}
+library(mgcv)
+library(gratia)
+```
+
+```{r}
+m <- 
+  gam(
+    meta_bat_volt_mean ~ s(sol_rad_total, k = 17) + 
+                         s(temp_air_meanC,  k = 15) +
+                         #interaction
+                         ti(sol_rad_total, temp_air_meanC, bs = "cr", k = 20) +
+                         s(id, bs = "re"), #random intercepts for sites
+    # family = scat(), #residuals are leptokurtic with gaussian(), but this is slower
+    family = gaussian(),
+    data = daily |> mutate(id = factor(meta_station_id)), #gam() requires factors
+    method = "REML"
+  )
+
+
+mgcv::k.check(m)
+gratia::appraise(m)
+summary(m)
+overview(m)
+```
+
+```{r}
+gratia::draw(m, unconditional = TRUE, overall_uncertainty = TRUE)
+```
+
+Battery voltage increases non-linearly with solar radiation (because it reaches max charge at some point?) and decreases with air temperature.
+Significant interaction looks like its just that there is a more than additive effect when cold and low solar radiation.
+
+Could generate predictive intervals for these smooths and flag points that fall outside of them.
+Would probably want to use more data for that though.
