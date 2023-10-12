@@ -12,11 +12,19 @@ solar_radiation_total <- function(doy, psi, tau, elev, rho) {
 #'
 #' @param data data returned by either `az_daily()` or `az_hourly()`
 #' @param freq indicator of whether `data` is hourly or daily (default is hourly)
+#' @param tau passed to `TrenchR::solar_radiation()` (via
+#'   `solar_radiation_total()`).  Atmospheric sensitivity from 0-1.  While 1 is
+#'   the theoretical max, 0.7 seems like the max observed globaly.  E.g. in
+#'   https://www.mdpi.com/2072-4292/13/9/1716
+#' @param rho passed to `TrenchR::solar_radiation()` (via
+#'   `solar_radiation_total()`). Albedo ranging from 0-1. Typical albedo values:
+#'   desert sand, 0.4; concrete, 0.55; bare soil, 0.17; asphalt, 0.04 (values
+#'   from https://en.wikipedia.org/wiki/Albedo).
 #'
 #' @return `data`, but with a `sol_rad_est` column indicating the estimated
 #'   theoretical maximum solar radiation for that date or datetime
 #'   
-calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
+calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily"), tau = 0.7, rho = 0.4) {
   # hourly and daily data have slightly different formats, so must deal with that
   freq <- match.arg(freq)
   if (freq == "hourly") {
@@ -88,9 +96,9 @@ calc_sol_rad_theoretical <- function(data, freq = c("hourly", "daily")) {
       sol_rad_est = solar_radiation_total(
         doy = yday({{ date_col }}),
         psi = psi * pi / 180,
-        tau = 0.7, #atmospheric transmissivity, 0.7 is probably a reasonable maximum
+        tau = tau,
         elev = elev_m,
-        rho = 0.4 #typical albedo values: desert sand, 0.4; concrete, 0.55; bare soil, 0.17; asphalt, 0.04
+        rho = rho 
       ) # in W/m^2
     ) 
   
