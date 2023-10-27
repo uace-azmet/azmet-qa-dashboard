@@ -44,7 +44,7 @@ check_hourly <- function(hourly) {
   report <- data.validator::data_validation_report()
   data.validator::validate(hourly, name = "Hourly Data") |>
     data.validator::validate_if(# within rounding error
-      gte(temp_airC, na_pass = TRUE, tol = 0.2),
+      gte(temp_airC, dwpt, na_pass = TRUE, tol = 0.2),
       "`temp_airC` ≥ `dwpt`") |>
     data.validator::validate_if(lte(wind_spd_mps, wind_spd_max_mps, na_pass = TRUE),
                                 "`wind_spd` ≤ `wind_spd_max`") |>
