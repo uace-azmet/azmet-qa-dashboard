@@ -22,7 +22,7 @@ check_hourly <- function(hourly) {
     mutate(
       #sol_rad_total should not be < 0.1 for more than 14 hours
       sol_rad_total_14 = !slider::slide_lgl(
-        sol_rad_total, ~all(.x < 0.1),
+        sol_rad_total, ~all(.x < 0.01),
         .after = 14, #.after because arrange(desc(datetime))
         .complete = TRUE
       ),
@@ -55,7 +55,7 @@ check_hourly <- function(hourly) {
                 "`sol_rad_total` ≤ theoretical max") |> 
     #TODO would be nice if CSV would contain all 14+ hours in a row maybe?
     validate_if(sol_rad_total_14 | is.na(sol_rad_total_14),
-                "`sol_rad_total` not < 0.1 for more than 14 hrs") |> 
+                "`sol_rad_total` not < 0.01 for more than 14 hrs") |> 
     validate_if(wind_spd_mps_14 | is.na(wind_spd_mps_14),
                 "`wind_spd_mps` not < 0.1 for more than 14 hrs") |> 
     validate_if(wind_vector_dir_14 | is.na(wind_vector_dir_14),
