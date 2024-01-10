@@ -26,6 +26,7 @@ jobs:
         with:
           r-version: 4.2.2 #freezes R version
           use-public-rspm: true
+          extra-repositories: 'https://cct-datascience.r-universe.dev'
       
       - name: Install System Dependencies
         run: |
