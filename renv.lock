@@ -214,8 +214,13 @@
     "azmetr": {
       "Package": "azmetr",
       "Version": "0.2.1.9000",
-      "Source": "Repository",
-      "Repository": "https://cct-datascience.r-universe.dev",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "uace-azmet",
+      "RemoteRepo": "azmetr",
+      "RemoteRef": "main",
+      "RemoteSha": "20075ba4b8a90e4079aae4facf5990474749e4bf",
       "Requirements": [
         "R",
         "attempt",
@@ -229,7 +234,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "c52d32d3bcfea0eca20f86973077989d"
+      "Hash": "d49beda6d46b0cbb1d38c0b3c132dd95"
     },
     "backports": {
       "Package": "backports",
