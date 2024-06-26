@@ -108,7 +108,7 @@ reporting_daily <- function(daily) {
     data.validator::validate_if(
       !is.na(temp_soil_10cm_meanC) &
         !is.na(temp_soil_50cm_meanC) |
-        meta_station_id %in% c("az28", "az40", "az42", "az43"), #no soil probes here
+        meta_station_id %in% c("az28", "az40", "az42", "az43", "az44"), #no soil probes here
       description = "Soil probes reporting"
     ) |>
     data.validator::validate_if(
