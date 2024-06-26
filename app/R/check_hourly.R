@@ -103,7 +103,7 @@ reporting_hourly <- function(hourly) {
     data.validator::validate_if(
       !is.na(temp_soil_10cmC) &
         !is.na(temp_soil_50cmC) |
-        meta_station_id %in% c("az28", "az40", "az42", "az43"),
+        meta_station_id %in% c("az28", "az40", "az42", "az43", "az44"),
       description = "Soil probes reporting"
     ) |> 
     data.validator::validate_if(

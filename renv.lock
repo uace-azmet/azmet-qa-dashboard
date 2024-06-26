@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.3.1",
+    "Version": "4.2.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -213,14 +213,14 @@
     },
     "azmetr": {
       "Package": "azmetr",
-      "Version": "0.2.1.9000",
+      "Version": "0.3.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
-      "RemoteHost": "api.github.com",
       "RemoteUsername": "uace-azmet",
       "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "20075ba4b8a90e4079aae4facf5990474749e4bf",
+      "RemoteSha": "789f6994cd54cb475a18114e55e1f90651e58f90",
+      "RemoteHost": "api.github.com",
       "Requirements": [
         "R",
         "attempt",
@@ -234,7 +234,7 @@
         "tibble",
         "tidyselect"
       ],
-      "Hash": "d49beda6d46b0cbb1d38c0b3c132dd95"
+      "Hash": "aabe54321e6266b7166012f2695ce59f"
     },
     "backports": {
       "Package": "backports",
