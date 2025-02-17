@@ -43,9 +43,9 @@ jobs:
       - name: Install packages required for Posit Connect
         shell: Rscript {0}
         run: |
-          if (!requireNamespace("packrat", quietly = TRUE)) pak::pak("packrat")
-          if (!requireNamespace("rsconnect", quietly = TRUE)) pak::pak("rsconnect")
-          if (!requireNamespace("Cairo", quietly = TRUE)) pak::pak("Cairo")
+          if (!requireNamespace("packrat", quietly = TRUE)) install.packages("packrat")
+          if (!requireNamespace("rsconnect", quietly = TRUE)) install.packages("rsconnect")
+          if (!requireNamespace("Cairo", quietly = TRUE)) install.packages("Cairo")
           
       - name: Generate manifest.json
         run: |
