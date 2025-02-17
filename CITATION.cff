@@ -17,8 +17,9 @@ authors:
     orcid: 'https://orcid.org/0000-0002-7430-7879'
   - given-names: Jeremy
     family-names: Weiss
-    email: azmet@arizona.edu
+    email: jlweiss@arizona.edu
     affiliation: University of Arizona Cooperative Extension
+    orcid: https://orcid.org/0000-0003-3597-0712
 repository-code: 'https://github.com/uace-azmet/azmet-qa-dashboard'
 license: MIT
 version: v0.1.0
