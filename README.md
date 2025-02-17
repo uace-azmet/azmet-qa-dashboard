@@ -15,3 +15,6 @@ This project uses [`renv`](https://rstudio.github.io/renv/articles/renv.html) fo
 ## Collaboration guidelines
 
 To contribute to this project, please create a new branch for your changes and make a pull request. One easy way to do this from within R is with the `usethis` package and the `pr_*` functions. `pr_init("branch-name")` begins a new branch locally, `pr_push()` helps you create a new pull request, and after it is merged you can use `pr_finish()` to clean things up. More about this workflow [here](https://usethis.r-lib.org/articles/pr-functions.html).
+
+------------------------------------------------------------------------
+Developed in collaboration with the University of Arizona [CCT Data Science](https://datascience.cct.arizona.edu/) team
