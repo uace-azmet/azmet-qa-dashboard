@@ -28,20 +28,24 @@ jobs:
           use-public-rspm: true
           extra-repositories: 'https://cct-datascience.r-universe.dev'
       
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get install libudunits2-dev
+      # System dependencies handled by `renv` + `pak`
+      # - name: Install System Dependencies
+      #   run: |
+      #     sudo apt-get install libudunits2-dev
 
       - uses: r-lib/actions/setup-renv@v2
+        env:
+          RENV_CONFIG_PAK_ENABLED: true
         with:
           cache-version: 3
       
+      #this might not be necessary?
       - name: Install packages required for Posit Connect
         shell: Rscript {0}
         run: |
-          if (!requireNamespace("packrat", quietly = TRUE)) install.packages("packrat")
-          if (!requireNamespace("rsconnect", quietly = TRUE)) install.packages("rsconnect")
-          if (!requireNamespace("Cairo", quietly = TRUE)) install.packages("Cairo")
+          if (!requireNamespace("packrat", quietly = TRUE)) pak::pak("packrat")
+          if (!requireNamespace("rsconnect", quietly = TRUE)) pak::pak("rsconnect")
+          if (!requireNamespace("Cairo", quietly = TRUE)) pak::pak("Cairo")
           
       - name: Generate manifest.json
         run: |
