@@ -29,14 +29,13 @@ jobs:
           use-public-rspm: true
           extra-repositories: 'https://cct-datascience.r-universe.dev'
       
-      # System dependencies handled by `renv` + `pak`
-      # - name: Install System Dependencies
-      #   run: |
-      #     sudo apt-get install libudunits2-dev
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get install libudunits2-dev
 
       - uses: r-lib/actions/setup-renv@v2
         env:
-          RENV_CONFIG_PAK_ENABLED: true
+          RENV_CONFIG_PAK_ENABLED: false #not working with repos option correctly?
         with:
           cache-version: 3
       
