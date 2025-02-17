@@ -8,6 +8,7 @@ on:
       - main
     paths-ignore:
       - 'README.md' #don't re-deploy the app if only the README changes
+  pull_request:
       
 name: deploy-to-connect
 
