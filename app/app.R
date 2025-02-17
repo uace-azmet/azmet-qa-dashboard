@@ -17,6 +17,8 @@ library(units)
 library(patchwork)
 library(hms)
 library(TrenchR)
+library(tsibble)
+library(rsconnect)
 
 # Everything in R/ should be sourced automatically, but I found I needed to add
 # these to get it to work.  Not sure why.
@@ -108,12 +110,12 @@ ui <- page_navbar(
       myAirDatepickerInput(
         inputId = "batteryrange",
         label = "Date Range",
-        value = c(Sys.Date() - 7, Sys.Date()),
+        value = c(Sys.Date() - 7, Sys.Date() - 1),
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
         minDate = "2020-12-30",
-        maxDate = Sys.Date(),
+        maxDate = Sys.Date() - 1,
         update_on = "close",
         addon = "none"
       )
