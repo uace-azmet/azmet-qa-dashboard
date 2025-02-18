@@ -9,8 +9,6 @@ library(data.validator)
 library(tidyverse)
 library(azmetr)
 library(gt)
-library(pins)
-library(arrow)
 library(plotly)
 library(slider)
 library(units)
@@ -203,47 +201,7 @@ ui <- page_navbar(
       )
     )
   ),
-  ## Forecast-based ----
-  nav_panel(
-    title = "Forecast-based",
-    layout_column_wrap(
-      width = NULL,
-      height = "100%",
-      fill = FALSE,
-      # plot area 1.5 times that of table area
-      style = css(grid_template_columns = "1fr 1.5fr"),
-      card(
-        full_screen = TRUE,
-        card_header(
-          "Forecast-Based Validation",
-          fc_popup, #defined at top of this file
-          class = "d-flex justify-content-between" # related to getting the info button in the right corner
-        ),
-        gt_output(outputId = "check_forecast") 
-      ),
-      card(
-        full_screen = TRUE,
-        layout_sidebar(
-          fillable = TRUE,
-          sidebar = sidebar(
-            width = "200px",
-            shiny::selectInput(
-              "station_fc",
-              "Station",
-              choices = azmetr::station_info$meta_station_name,
-              multiple = FALSE
-            ),
-            shiny::selectInput(
-              "plot_cols_fc",
-              "Variables",
-              choices = c("Temperature", "Precip & Sun", "Wind")
-            )
-          ),
-          plotOutput(outputId = "plot_fc") 
-        )
-      )
-    )
-  ),
+
   ## Battery ----
   nav_panel(
     "Battery",
@@ -390,49 +348,6 @@ server <- function(input, output, session) {
       })
       shinybusy::remove_modal_spinner()
     }
-  })
-  
-  # Forecast-based tab ----
-  observe({
-    if (input$navbar == "Forecast-based") {
-      
-      shinybusy::show_modal_spinner(
-        "semipolar", color = "#AB0520", text = "Fetching data ...")
-      
-      board <- board_connect()
-      fc_daily <- board |> pin_read("ericrscott/fc_daily")
-      req(input$fcrange, fc_daily)
-      start <- input$fcrange[1]
-      end <- input$fcrange[2]
-      fc_daily <- fc_daily |>
-        filter(datetime > start & datetime <= end) |> 
-        arrange(varname)
-      
-      output$check_forecast <- 
-        gt::render_gt({
-          #reload when input changes
-          input$fcrange
-          
-          #run validation
-          report_fc <- check_forecast(fc_daily)
-          
-          #convert to gt table
-          format_report_gt(report_fc, fc_daily)
-        })
-    }
-    output$plot_fc <- 
-      renderPlot({
-        # force reload as soon as input changes
-        input$fcrange
-        
-        cols_fc <- 
-          switch(input$plot_cols_fc,
-                 "Temperature" = cols_daily_temp,
-                 "Precip & Sun" = cols_daily_precip,
-                 "Wind" = cols_daily_wind)
-        plot_fc(fc_daily, cols = cols_fc, station = input$station_fc)
-      })
-    shinybusy::remove_modal_spinner()
   })
   
   
