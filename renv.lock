@@ -532,7 +532,7 @@
       "RemoteUsername": "uace-azmet",
       "RemoteRepo": "azmetr",
       "RemoteRef": "main",
-      "RemoteSha": "f2da29a6e0dedbb4c4e43fc0022fd4b089676ddd"
+      "RemoteSha": "041cd4ec5e83ed3f076d656bb7102955c33bfba6"
     },
     "backports": {
       "Package": "backports",
