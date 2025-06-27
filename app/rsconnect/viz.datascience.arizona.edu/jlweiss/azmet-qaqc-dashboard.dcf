@@ -5,7 +5,7 @@ account: jlweiss
 server: viz.datascience.arizona.edu
 hostUrl: https://viz.datascience.arizona.edu/__api__
 appId: 817
-bundleId: 6827
+bundleId: 6829
 url: https://viz.datascience.arizona.edu:443/azmet/azmet-qaqc-dashboard/
 asMultiple: FALSE
 asStatic: FALSE
