@@ -48,7 +48,7 @@ ui <- page_navbar(
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
-        minDate = "2020-12-30",
+        minDate = min(azmetr::station_info$start_date),
         maxDate = Sys.Date() - 1,
         update_on = "close",
         addon = "none"
@@ -56,11 +56,13 @@ ui <- page_navbar(
       # really just for testing purposes.  Can be removed if desired
       checkboxInput(
         "test_daily",
-        span("Use test data",
-             tooltip(
-               bs_icon("info-circle"),
-               "Use fake data with known errors for all validations"
-             )),
+        span(
+          "Use test data",
+          tooltip(
+            bs_icon("info-circle"),
+            "Use fake data with known errors for all validations"
+          )
+        ),
         value = FALSE
       )
     ),
@@ -80,11 +82,13 @@ ui <- page_navbar(
       ),
       checkboxInput(
         "test_hourly",
-        span("Use test data",
-             tooltip(
-               bs_icon("info-circle"),
-               "Use fake data with known errors for all validations"
-             )),
+        span(
+          "Use test data",
+          tooltip(
+            bs_icon("info-circle"),
+            "Use fake data with known errors for all validations"
+          )
+        ),
         value = FALSE
       )
     ),
@@ -118,9 +122,9 @@ ui <- page_navbar(
         addon = "none"
       )
     )
-  ), 
+  ),
   ## Daily ----
-  
+
   nav_panel(
     title = "Daily",
     # shinybusy::add_busy_spinner("semipolar", color = "#EF4056", position = "bottom-left", margins = c(50, 50)),
@@ -136,11 +140,10 @@ ui <- page_navbar(
         full_screen = TRUE,
         gt_output(outputId = "reporting_daily"),
         gt_output(outputId = "check_daily")
-        
       ),
-      
+
       # card for plots with its own sidebar inputs for station and variables
-      
+
       card(
         full_screen = TRUE,
         layout_sidebar(
@@ -159,7 +162,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_daily") 
+          plotOutput(outputId = "plot_daily")
         )
       )
     )
@@ -196,7 +199,7 @@ ui <- page_navbar(
               choices = c("Temperature", "Precip & Sun", "Wind")
             )
           ),
-          plotOutput(outputId = "plot_hourly") 
+          plotOutput(outputId = "plot_hourly")
         )
       )
     )
@@ -206,7 +209,7 @@ ui <- page_navbar(
   nav_panel(
     "Battery",
     layout_column_wrap(
-      width = 1/2,
+      width = 1 / 2,
       height = "100%",
       card(
         full_screen = TRUE,
@@ -233,15 +236,15 @@ ui <- page_navbar(
           title = "Voltage",
           nav_panel(
             "Min Temp",
-            plotlyOutput(outputId = "plot_battery_min_temp") 
+            plotlyOutput(outputId = "plot_battery_min_temp")
           ),
           nav_panel(
             "Max Temp",
-            plotlyOutput(outputId = "plot_battery_max_temp") 
+            plotlyOutput(outputId = "plot_battery_max_temp")
           ),
           nav_panel(
             "Solar Radiation",
-            plotlyOutput(outputId = "plot_battery_sol_rad") 
+            plotlyOutput(outputId = "plot_battery_sol_rad")
           )
         )
       )
@@ -283,7 +286,11 @@ server <- function(input, output, session) {
       })
       output$reporting_daily <- gt::render_gt({
         input$dailyrange
-        format_report_gt(reporting_daily(daily), daily, title = "Data Reporting")
+        format_report_gt(
+          reporting_daily(daily),
+          daily,
+          title = "Data Reporting"
+        )
       })
       output$plot_daily <- renderPlot({
         #reload when input changes
