@@ -75,7 +75,7 @@ ui <- page_navbar(
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
-        minDate = "2020-12-30",
+        minDate = min(azmetr::station_info$start_date),
         maxDate = Sys.Date(),
         update_on = "close",
         addon = "none"
@@ -116,7 +116,7 @@ ui <- page_navbar(
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
-        minDate = "2020-12-30",
+        minDate = min(azmetr::station_info$start_date),
         maxDate = Sys.Date() - 1,
         update_on = "close",
         addon = "none"
