@@ -80,6 +80,10 @@ ui <- page_navbar(
         update_on = "close",
         addon = "none"
       ),
+      p(
+        bsicons::bs_icon("info-circle"),
+        "If today's date is selected as the end date, data will be requested through the previous hour."
+      ),
       checkboxInput(
         "test_hourly",
         span(
@@ -112,14 +116,18 @@ ui <- page_navbar(
       myAirDatepickerInput(
         inputId = "batteryrange",
         label = "Date Range",
-        value = c(Sys.Date() - 7, Sys.Date() - 1),
+        value = c(Sys.Date() - 7, Sys.Date()),
         range = TRUE,
         separator = " – ",
         dateFormat = "MM/dd/yy",
         minDate = "2020-12-30",
-        maxDate = Sys.Date() - 1,
+        maxDate = Sys.Date(),
         update_on = "close",
         addon = "none"
+      ),
+      p(
+        bsicons::bs_icon("info-circle"),
+        "If today's date is selected as the end date, hourly data is to the previous hour and daily data to yesterday."
       )
     )
   ),
@@ -259,30 +267,36 @@ server <- function(input, output, session) {
   observe({
     if (input$navbar == "Daily") {
       shinybusy::show_modal_spinner(
-        "semipolar", color = "#AB0520", text = "Fetching data ...")
-      
+        "semipolar",
+        color = "#AB0520",
+        text = "Fetching data ..."
+      )
+
       req(input$dailyrange) #wait until input exists
-      
+
       start <- input$dailyrange[1]
       end <- input$dailyrange[2]
-      
+
+      if (is.na(end)) {
+        end <- start
+      }
+
       #temporary just for testing
-      if(input$test_daily) { 
-        daily <- read_csv("testdata_daily.csv") 
-      } else { 
+      if (input$test_daily) {
+        daily <- read_csv("testdata_daily.csv")
+      } else {
         #query API
         daily <- az_daily(start_date = start, end_date = end)
-      } 
+      }
       output$check_daily <- gt::render_gt({
         #reload when input changes
         input$dailyrange
-        
+
         #do validation report
         report_daily <- check_daily(daily)
-        
+
         #convert to gt table
         format_report_gt(report_daily, daily, title = "Data Values")
-        
       })
       output$reporting_daily <- gt::render_gt({
         input$dailyrange
@@ -295,15 +309,17 @@ server <- function(input, output, session) {
       output$plot_daily <- renderPlot({
         #reload when input changes
         input$dailyrange
-        
-        cols_daily <- 
-          switch(input$plot_cols_daily,
-                 "Temperature" = cols_daily_temp,
-                 "Precip & Sun" = cols_daily_precip,
-                 "Wind" = cols_daily_wind)
+
+        cols_daily <-
+          switch(
+            input$plot_cols_daily,
+            "Temperature" = cols_daily_temp,
+            "Precip & Sun" = cols_daily_precip,
+            "Wind" = cols_daily_wind
+          )
         plot_daily(daily, cols = cols_daily, station = input$station_daily)
       })
-      
+
       shinybusy::remove_modal_spinner()
     }
   })
@@ -312,45 +328,65 @@ server <- function(input, output, session) {
   observe({
     if (input$navbar == "Hourly") {
       shinybusy::show_modal_spinner(
-        "semipolar", color = "#AB0520", text = "Fetching data ...")
-      
+        "semipolar",
+        color = "#AB0520",
+        text = "Fetching data ..."
+      )
+
       req(input$hourlyrange) #wait until input exists
+
+      print(input$hourlyrange)
+
+      start <- input$hourlyrange[1] |> as.Date()
+      end <- input$hourlyrange[2] |> as.Date()
+
+      # If only a single date is selected, set end date to start date
+      if (is.na(end)) {
+        end <- as.Date(start)
+      }
+      # If end date is today, assume user wants most recent data
+      if (end == today()) {
+        end <- now() - hours(1)
+      }
+
       
-      #to convert to datetime
-      start <- input$hourlyrange[1] |> as.POSIXct() |> format_ISO8601() 
-      end <- input$hourlyrange[2] |> as.POSIXct() |> format_ISO8601()
-      
-      #temporary for testing
-      if(input$test_hourly) {
+#temporary for testing
+      if (input$test_hourly) {
         hourly <- read_csv("testdata_hourly.csv")
       } else {
         #query API
         hourly <- az_hourly(start_date_time = start, end_date_time = end)
       }
-      
+
       output$check_hourly <- gt::render_gt({
         # force reload as soon as input changes
         input$hourlyrange
-        
+
         #do validation report
         report_hourly <- check_hourly(hourly)
-        
+
         #convert to gt table
         format_report_gt(report_hourly, hourly, title = "Data Values")
       })
       output$reporting_hourly <- gt::render_gt({
         input$hourlyrange
-        format_report_gt(reporting_hourly(hourly), hourly, title = "Data Reporting")
+        format_report_gt(
+          reporting_hourly(hourly),
+          hourly,
+          title = "Data Reporting"
+        )
       })
       output$plot_hourly <- renderPlot({
         # force reload as soon as input changes
         input$hourlyrange
-        
-        cols_hourly <- 
-          switch(input$plot_cols_hourly,
-                 "Temperature" = cols_hourly_temp,
-                 "Precip & Sun" = cols_hourly_precip,
-                 "Wind" = cols_hourly_wind)
+
+        cols_hourly <-
+          switch(
+            input$plot_cols_hourly,
+            "Temperature" = cols_hourly_temp,
+            "Precip & Sun" = cols_hourly_precip,
+            "Wind" = cols_hourly_wind
+          )
         plot_hourly(hourly, cols = cols_hourly, station = input$station_hourly)
       })
       shinybusy::remove_modal_spinner()
@@ -367,12 +403,24 @@ server <- function(input, output, session) {
       
       req(input$batteryrange)
       
-      #to convert to datetime
-      start <- input$batteryrange[1] |> as.POSIXct() |> format_ISO8601() 
-      end   <- input$batteryrange[2] |> as.POSIXct() |> format_ISO8601()
-      
-      daily <- az_daily(start_date = start, end_date = end)
-      hourly <- az_hourly(start_date_time = start, end_date_time = end)
+      # # to convert to date object (maybe not necessary?)
+      start <- input$batteryrange[1] |> as.Date()
+      end <- input$batteryrange[2] |> as.Date()
+
+      # If only a single date is selected
+      if (is.na(end)) {
+        end <- start
+      }
+
+      # If the end date is today assume user wants most recent data
+      if (end == today()) {
+        end_daily <- end - days(1)
+        end_hourly <- now() - hours(1)
+      } else {
+        end_daily <- end_hourly <- end
+      }
+      daily <- az_daily(start_date = start, end_date = end_daily)
+      hourly <- az_hourly(start_date_time = start, end_date_time = end_hourly)
       
       output$check_battery_daily <- gt::render_gt({
         # force reload as soon as input changes
